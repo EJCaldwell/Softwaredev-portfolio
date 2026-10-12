@@ -12,11 +12,12 @@
  *   Three separate attempts were made to induce Next's own boundary in a real browser
  *   without editing application code (the verification gate must not fix or instrument
  *   the product):
- *     1. Poisoning `HTMLElement.prototype.dataset` for `<html>`, which `lib/useTheme.ts`
- *        reads in `getSnapshot`. Result: the throw happened during HYDRATION. React
- *        logged it and kept the server-rendered HTML; the boundary did not render.
- *     2. The same poison armed after load, then activating the theme toggle. Result: the
- *        throw landed in the click handler, i.e. outside the render phase, so it became
+ *     1. Poisoning `HTMLElement.prototype.dataset` for `<html>`, which the (since
+ *        removed) theme hook read during render. Result: the throw happened during
+ *        HYDRATION. React logged it and kept the server-rendered HTML; the boundary did
+ *        not render.
+ *     2. The same poison armed after load, then activating the (since removed) theme
+ *        toggle. Result: the throw landed in the click handler, i.e. outside the render phase, so it became
  *        an uncaught page error rather than a boundary trigger. Error boundaries do not
  *        catch event-handler errors, by design.
  *     3. Corrupting the RSC (`?_rsc=`) payload of a client-side `<Link>` navigation.

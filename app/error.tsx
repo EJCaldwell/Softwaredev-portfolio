@@ -4,7 +4,7 @@
  * Owns: what a visitor sees when a render or data error escapes a route segment. Next.js
  * requires this file to be a client component, because it receives a `reset` callback and
  * must re-render on the client. It renders inside the root layout, so nav, footer, and
- * theme survive the error — only the page body is replaced.
+ * the gradient canvas survive the error — only the page body is replaced.
  *
  * Deliberate choice: the visitor is never shown `error.message`. A stack trace or an
  * internal message tells a visitor nothing and reads as a broken site; the real

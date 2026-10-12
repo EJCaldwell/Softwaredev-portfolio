@@ -31,6 +31,9 @@ type ProjectCardProps = {
  * @param props.headingLevel - `2` or `3`; see {@link ProjectCardProps.headingLevel}.
  * @returns The card. The `id` is the project's slug, so `/projects#<slug>` deep-links to it.
  *
+ * The `project-card` class (defined in `app/globals.css`) adds the maroon corner glow and
+ * the hover / keyboard-focus state: the glow brightens and the border warms toward gold.
+ *
  * Link names: each card has its own "Source"/"Live site" links, so the visible word alone
  * would be ambiguous out of context. An `aria-label` adds the project title and STARTS
  * with the visible text (WCAG 2.5.3 Label in Name, so speech users can say "click
@@ -54,7 +57,7 @@ export default function ProjectCard({
     <article
       id={project.slug}
       aria-labelledby={titleId}
-      className="border-border bg-surface flex h-full min-w-0 flex-col gap-4 rounded-md border p-6"
+      className="project-card border-border bg-surface flex h-full min-w-0 flex-col gap-4 rounded-md border p-6"
     >
       <Heading id={titleId} className="text-lg font-semibold break-words">
         {project.title}

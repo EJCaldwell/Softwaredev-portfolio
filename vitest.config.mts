@@ -27,9 +27,9 @@
  *     of this rule is `testMatch` + `testDir` in `playwright.config.ts`. Change one side
  *     and you must change the other, or a runner starts executing tests it cannot run.
  *
- *   - `environment: "jsdom"`. The theme store in `lib/useTheme.ts` and the
- *     component tests read `document.documentElement` and `localStorage`, so a `node`
- *     environment cannot host them. jsdom is chosen over happy-dom because Testing
+ *   - `environment: "jsdom"`. The component tests render React trees into
+ *     `document` and drive them with Testing Library, so a `node` environment cannot
+ *     host them. jsdom is chosen over happy-dom because Testing
  *     Library and React 19 are best-tested against it.
  *
  *   - `globals: true`. Lets test files use `describe`/`it`/`expect` without importing

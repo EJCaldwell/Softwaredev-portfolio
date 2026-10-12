@@ -1,8 +1,9 @@
 /**
  * components/Nav.tsx — the persistent site header.
  *
- * Owns: the brand wordmark, the primary navigation landmark, and the slot the theme
- * toggle sits in. Rendered once by `app/layout.tsx` above `<main>`, so it appears on
+ * Owns: the brand wordmark and the primary navigation landmark. (It used to also hold a
+ * light/dark theme toggle; the site now has one fixed palette and the toggle is gone.)
+ * Rendered once by `app/layout.tsx` above `<main>`, so it appears on
  * every route.
  *
  * Scope: applies at every width. Phase 5.2 (`mobile-ui`) fixed a WCAG 1.4.10 reflow
@@ -14,18 +15,17 @@
  * brand) is legible and needs no open/close state, focus trap, or Escape-key contract,
  * which a disclosure menu would add for a four-link nav that does not need one.
  *
- * Server component (no "use client"): only the nested `ThemeToggle` needs the client
- * runtime, so the header itself ships zero JS.
+ * Server component (no "use client"): only the nested `NavLink` leaves need the client
+ * runtime (for `usePathname()`), so the header itself ships no JS of its own.
  */
 
 import Link from "next/link";
 import type { JSX } from "react";
 import NavLink from "@/components/NavLink";
-import ThemeToggle from "@/components/ThemeToggle";
 import { NAV_LINKS, SITE } from "@/lib/site";
 
 /**
- * The site header: brand link, primary nav, theme toggle.
+ * The site header: brand link and primary nav.
  *
  * @returns A `<header>` containing a real `<nav>` landmark whose links are a `<ul>`, so
  *          assistive technology announces the list length.
@@ -51,7 +51,10 @@ export default function Nav(): JSX.Element {
        This is a decorative full-width hairline, not a control boundary: the 3:1 UI
        boundary requirement applies to components a visitor has to identify and operate,
        and a 3:1 rule spanning the page under a sticky nav reads as a heavy slab against
-       this paper-and-ink palette. See the `border` vs `outline` note in globals.css. */
+       the gradient canvas. See the `border` vs `outline` note in globals.css.
+
+       `bg-bg/85` is an 85% black wash over the gradient: it only ever darkens what
+       scrolls beneath, so nav text contrast never drops below its raw-maroon figure. */
     <header className="border-border/70 bg-bg/85 sticky top-0 z-10 border-b backdrop-blur">
       <div className="max-w-page mx-auto flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-4">
         <Link
@@ -61,34 +64,15 @@ export default function Nav(): JSX.Element {
           {SITE.name}
         </Link>
 
-        {/*
-          `gap-x-8`, NOT `gap-x-6` — Phase 5.2 review. `gap-x-6` (24px) is the SAME
-          horizontal gap the `<ul>` below uses BETWEEN its own links, so the toggle read
-          as a fifth nav item rather than a separate control grouped apart from the
-          links. `gap-x-8` (32px) matches the OUTER row's own `gap-x-8` (line 57, between
-          the wordmark and this whole group), giving this header exactly two grouping
-          distances: 24px within a group (links to each other), 32px between groups
-          (wordmark to nav+toggle, and now nav to toggle).
-
-          `items-start`, NOT `items-center` — same review. Once the `<ul>` wraps to a
-          second row (an enlarged root font, or a narrow viewport — see the `<ul>`'s own
-          `flex-wrap` comment below), `items-center` centres the toggle against the
-          NAV'S WHOLE STACK, so it sits at no row's baseline: not the first row's, not
-          the second's, just the midpoint between them. `items-start` glues the toggle to
-          the TOP of the group, which is the first link row's baseline whether the list
-          wraps or not — the one alignment that stays correct in both states, rather than
-          only being correct in the single-row case.
-        */}
-        <div className="flex flex-wrap items-start gap-x-8 gap-y-2">
-          <nav aria-label="Primary">
-            {/*
+        <nav aria-label="Primary">
+          {/*
               `flex-wrap` HERE, ON THE `<ul>` ITSELF, IS DEFECT 5.2-D1's FIX.
 
-              WHY THE OUTER `<div>`'s `flex-wrap` (line 53/61) DID NOT ALREADY COVER THIS.
+              WHY THE OUTER ROW's `flex-wrap` (the `<div>` above) DID NOT ALREADY COVER THIS.
               That wrap only ever operates on its own direct children — the wordmark
-              `<Link>`, and this `<div>` holding nav+toggle. Once the viewport is too
-              narrow for everything, that outer wrap correctly drops the nav+toggle group
-              to its own row under the wordmark (see the 320px test in e2e/layout.spec.ts).
+              `<Link>` and this `<nav>`. Once the viewport is too narrow for both, that
+              outer wrap correctly drops the nav to its own row under the wordmark
+              (see the 320px test in e2e/layout.spec.ts).
               But the `<ul>` inside is a SEPARATE flex formatting context with its own
               children (the four `<li>`s), and without `flex-wrap` here, a flex item's
               default `min-width` is `auto`, not `0` — meaning the browser will not shrink
@@ -126,17 +110,15 @@ export default function Nav(): JSX.Element {
               where this list never wraps — `gap-y-*` only has anything to apply to once
               there is more than one row.
             */}
-            <ul className="flex list-none flex-wrap items-center gap-x-6 gap-y-2 p-0 text-sm">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  {/* The one client leaf in the header — see components/NavLink.tsx. */}
-                  <NavLink href={link.href} label={link.label} />
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <ThemeToggle />
-        </div>
+          <ul className="flex list-none flex-wrap items-center gap-x-6 gap-y-2 p-0 text-sm">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                {/* The one client leaf in the header — see components/NavLink.tsx. */}
+                <NavLink href={link.href} label={link.label} />
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </header>
   );

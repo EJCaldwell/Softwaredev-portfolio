@@ -1,15 +1,18 @@
 /**
  * components/Footer.tsx — the persistent site footer.
  *
- * Owns: the copyright byline and the contact/profile links (email, GitHub, and LinkedIn
+ * Owns: the copyright byline, a repeat of the site's page links (Home / Projects /
+ * About, from `NAV_LINKS` — so a visitor who has scrolled to the bottom can move on
+ * without scrolling back up), and the contact/profile links (email, GitHub, and LinkedIn
  * when configured). Rendered once by `app/layout.tsx` below `<main>`.
  *
  * Server component: the copyright year is computed at render time on the server, which
  * for statically-generated routes means "at build time".
  */
 
+import Link from "next/link";
 import type { JSX } from "react";
-import { SITE } from "@/lib/site";
+import { NAV_LINKS, SITE } from "@/lib/site";
 
 /** Shared underline-link styling for the footer's outbound links. */
 const LINK =
@@ -18,8 +21,15 @@ const LINK =
 /**
  * The site footer.
  *
- * @returns A `<footer>` landmark with the byline and a list of contact links. LinkedIn is
- *   rendered only when `SITE.linkedinUrl` is set.
+ * @returns A `<footer>` landmark with the byline, a `<nav aria-label="Footer">` of page
+ *   links, and a list of contact links. LinkedIn is rendered only when `SITE.linkedinUrl`
+ *   is set.
+ *
+ * Page links use `next/link` (client-side navigation, so the page fade in
+ * `components/PageTransition.tsx` plays, same as the header). The `aria-label` is what
+ * distinguishes this landmark from the header's `<nav aria-label="Primary">` — two
+ * unlabelled `<nav>`s would be announced identically by screen readers. No
+ * `aria-current` here: the header already marks the current page, once.
  *
  * Side effects: none.
  *
@@ -38,6 +48,17 @@ export default function Footer(): JSX.Element {
         <p>
           © {year} {SITE.name}
         </p>
+        <nav aria-label="Footer">
+          <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+            {NAV_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className={LINK}>
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
           <li>
             <a href={`mailto:${SITE.email}`} className={LINK}>

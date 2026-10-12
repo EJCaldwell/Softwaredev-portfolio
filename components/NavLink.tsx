@@ -119,7 +119,7 @@ export default function NavLink({
       // `py-3` takes the link from an 18px-tall hit area to ~42px. This is NOT a
       // conformance fix: the links measure 38-51px wide by 18px tall, which fails the 44pt
       // platform guidance but PASSES WCAG 2.5.8 (Target Size (Minimum), AA) via its spacing
-      // exception — centres are 65.5px apart horizontally and >=41px from the toggle and
+      // exception — centres are 65.5px apart horizontally and well clear of the
       // wordmark, comfortably over the 24px threshold. So this is ergonomics, plus margin
       // on an exception the nav would otherwise depend on: any future change that tightens
       // nav spacing would silently turn a passing layout into a failing one.

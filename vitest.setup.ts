@@ -16,11 +16,6 @@
  *      Without it, a component test would leave mounted trees in `document.body` and the
  *      next test's `getByRole` would match an element from the previous test — a failure
  *      mode that looks like flakiness and costs an hour to diagnose.
- *   3. `<html>` attribute reset. `lib/useTheme.ts` treats `data-theme` on
- *      `document.documentElement` as the source of truth. jsdom reuses one `document` for
- *      all tests in a file, so a leftover `data-theme` from an earlier test would make a
- *      later one read the wrong preference. Clearing it keeps each test starting from the
- *      real first-visit state (`"system"`, i.e. attribute absent).
  *
  * Side effects: mutates global `expect` and registers global `afterEach` hooks. No
  * network or filesystem access. Failure modes: none at import; if this file throws, every
@@ -33,6 +28,4 @@ import { afterEach } from "vitest";
 
 afterEach(() => {
   cleanup();
-  // Keep DOM-as-source-of-truth theme state from leaking between tests (see header).
-  document.documentElement.removeAttribute("data-theme");
 });

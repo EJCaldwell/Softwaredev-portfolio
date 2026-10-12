@@ -3,7 +3,7 @@
  *
  * Owns: what a visitor sees when a route does not exist. Next.js renders this for any
  * unmatched path and for any explicit `notFound()` call, inside the root layout — so the
- * nav, footer, and theme are already present and this file supplies only the page body.
+ * nav, footer, and gradient canvas are already present and this file supplies only the page body.
  *
  * It has to look deliberate, not like a crash, and it must always offer a route back to
  * something useful — stale links to old project URLs are the likely way visitors land here.
@@ -14,6 +14,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { JSX } from "react";
+import PageTransition from "@/components/PageTransition";
 import { SITE } from "@/lib/site";
 
 /**
@@ -42,40 +43,44 @@ export const metadata: Metadata = {
  */
 export default function NotFound(): JSX.Element {
   return (
-    /* max-w-page outer / max-w-measure inner: see the layout-widths note in globals.css.
-       The measure must nest inside the page container so its left edge lands on the
-       nav's left edge; centering 40rem on its own would offset it ~200px at wide sizes. */
-    <section className="max-w-page mx-auto px-6 py-24">
-      <div className="max-w-measure flex flex-col gap-6">
-        <p className="text-muted text-sm tracking-wider uppercase">404</p>
-        <h1 className="text-2xl font-semibold">
-          This page doesn&rsquo;t exist
-        </h1>
-        <p className="text-muted text-lg break-words">
-          The link may be out of date, or the page may have moved. The projects
-          page is the best place to pick things back up.
-        </p>
-        <p className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-          <Link
-            href="/"
-            className="border-outline hover:border-fg text-fg inline-flex items-center rounded-full border px-4 py-2 no-underline transition-colors"
-          >
-            Back to home
-          </Link>
-          <Link
-            href="/projects"
-            className="border-outline hover:border-fg text-fg inline-flex items-center rounded-full border px-4 py-2 no-underline transition-colors"
-          >
-            Browse my work
-          </Link>
-          <a
-            href={`mailto:${SITE.email}`}
-            className="text-muted hover:text-fg decoration-border hover:decoration-accent underline underline-offset-4 transition-colors"
-          >
-            Email {SITE.email}
-          </a>
-        </p>
-      </div>
-    </section>
+    // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
+    <PageTransition>
+      {/* max-w-page outer / max-w-measure inner: see the layout-widths note in
+      globals.css. The measure must nest inside the page container so its left
+      edge lands on the nav's left edge; centering 40rem on its own would offset
+      it ~200px at wide sizes. */}
+      <section className="max-w-page mx-auto px-6 py-24">
+        <div className="max-w-measure flex flex-col gap-6">
+          <p className="text-muted text-sm tracking-wider uppercase">404</p>
+          <h1 className="text-2xl font-semibold">
+            This page doesn&rsquo;t exist
+          </h1>
+          <p className="text-muted text-lg break-words">
+            The link may be out of date, or the page may have moved. The
+            projects page is the best place to pick things back up.
+          </p>
+          <p className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+            <Link
+              href="/"
+              className="border-outline hover:border-fg text-fg inline-flex items-center rounded-full border px-4 py-2 no-underline transition-colors"
+            >
+              Back to home
+            </Link>
+            <Link
+              href="/projects"
+              className="border-outline hover:border-fg text-fg inline-flex items-center rounded-full border px-4 py-2 no-underline transition-colors"
+            >
+              Browse my work
+            </Link>
+            <a
+              href={`mailto:${SITE.email}`}
+              className="text-muted hover:text-fg decoration-border hover:decoration-accent underline underline-offset-4 transition-colors"
+            >
+              Email {SITE.email}
+            </a>
+          </p>
+        </div>
+      </section>
+    </PageTransition>
   );
 }

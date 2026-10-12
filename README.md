@@ -40,7 +40,7 @@ same way in every project.
 | ----------- | ------------------------------------------------------------------------------ |
 | `/`         | Hero, call-to-action links, featured projects                                  |
 | `/projects` | All projects; `?tag=<Technology>` filters the list (shareable, no JS required) |
-| `/about`    | Headshot, background, skills, experience, education                            |
+| `/about`    | Headshot, background, skills, experience (hidden while empty), education       |
 
 ## Scripts
 

@@ -8,6 +8,7 @@
  */
 
 import type { JSX } from "react";
+import PageTransition from "@/components/PageTransition";
 import PlaceholderNotice from "@/components/PlaceholderNotice";
 import ProjectCard from "@/components/ProjectCard";
 import TagFilter from "@/components/TagFilter";
@@ -40,38 +41,41 @@ export default async function ProjectsPage({
     hasPlaceholderProjects() || containsPlaceholder(PROJECTS_PAGE.intro);
 
   return (
-    <section className="max-w-page mx-auto px-6 py-12 md:py-24">
-      <div className="flex flex-col gap-12">
-        <header className="max-w-measure flex flex-col gap-4">
-          <h1 className="text-2xl font-semibold">{PROJECTS_PAGE.heading}</h1>
-          <p className="text-muted text-lg break-words">
-            {PROJECTS_PAGE.intro}
-          </p>
-        </header>
+    // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
+    <PageTransition>
+      <section className="max-w-page mx-auto px-6 py-12 md:py-24">
+        <div className="flex flex-col gap-12">
+          <header className="max-w-measure flex flex-col gap-4">
+            <h1 className="text-2xl font-semibold">{PROJECTS_PAGE.heading}</h1>
+            <p className="text-muted text-lg break-words">
+              {PROJECTS_PAGE.intro}
+            </p>
+          </header>
 
-        <TagFilter
-          tags={ALL_TAGS}
-          active={activeTag}
-          label={PROJECTS_PAGE.filterLabel}
-          allLabel={PROJECTS_PAGE.allLabel}
-        />
+          <TagFilter
+            tags={ALL_TAGS}
+            active={activeTag}
+            label={PROJECTS_PAGE.filterLabel}
+            allLabel={PROJECTS_PAGE.allLabel}
+          />
 
-        {visible.length === 0 ? (
-          // Reachable only if the data changes so a known tag has no projects; kept so the
-          // page never renders as a silent blank.
-          <p className="text-muted">{PROJECTS_PAGE.emptyMessage}</p>
-        ) : (
-          <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2">
-            {visible.map((project) => (
-              <li key={project.slug} className="min-w-0">
-                <ProjectCard project={project} headingLevel={2} />
-              </li>
-            ))}
-          </ul>
-        )}
+          {visible.length === 0 ? (
+            // Reachable only if the data changes so a known tag has no projects; kept so the
+            // page never renders as a silent blank.
+            <p className="text-muted">{PROJECTS_PAGE.emptyMessage}</p>
+          ) : (
+            <ul className="m-0 grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-2">
+              {visible.map((project) => (
+                <li key={project.slug} className="min-w-0">
+                  <ProjectCard project={project} headingLevel={2} />
+                </li>
+              ))}
+            </ul>
+          )}
 
-        {showNotice ? <PlaceholderNotice /> : null}
-      </div>
-    </section>
+          {showNotice ? <PlaceholderNotice /> : null}
+        </div>
+      </section>
+    </PageTransition>
   );
 }

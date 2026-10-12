@@ -11,6 +11,7 @@
 
 import Image from "next/image";
 import type { JSX } from "react";
+import PageTransition from "@/components/PageTransition";
 import PlaceholderNotice from "@/components/PlaceholderNotice";
 import { containsPlaceholder } from "@/lib/placeholder";
 import { ABOUT_PAGE, HEADSHOT } from "@/lib/site";
@@ -31,70 +32,75 @@ export const metadata = {
  */
 export default function AboutPage(): JSX.Element {
   return (
-    <section className="max-w-page mx-auto px-6 py-12 md:py-24">
-      <div className="flex flex-col gap-16">
-        {/* Stacked on phones; side by side from md up. The headshot never shrinks
+    // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
+    <PageTransition>
+      <section className="max-w-page mx-auto px-6 py-12 md:py-24">
+        <div className="flex flex-col gap-16">
+          {/* Stacked on phones; side by side from md up. The headshot never shrinks
             (`shrink-0` on the figure) so its reserved box is stable. */}
-        <header className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
-          <div className="max-w-measure flex flex-col gap-4">
-            <h1 className="text-2xl font-semibold">{ABOUT_PAGE.heading}</h1>
-            <p className="text-muted text-lg break-words">{ABOUT_PAGE.intro}</p>
-          </div>
-          <Headshot />
-        </header>
+          <header className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
+            <div className="max-w-measure flex flex-col gap-4">
+              <h1 className="text-2xl font-semibold">{ABOUT_PAGE.heading}</h1>
+              <p className="text-muted text-lg break-words">
+                {ABOUT_PAGE.intro}
+              </p>
+            </div>
+            <Headshot />
+          </header>
 
-        <section
-          aria-labelledby="background"
-          className="max-w-measure flex flex-col gap-3"
-        >
-          <h2 id="background" className="text-lg font-semibold">
-            {ABOUT_PAGE.bioHeading}
-          </h2>
-          {ABOUT_PAGE.bio.map((paragraph, index) => (
-            // Index key is safe: the list is a static constant, never reordered.
-            <p key={index} className="text-muted break-words">
-              {paragraph}
-            </p>
-          ))}
-        </section>
-
-        <section aria-labelledby="skills" className="flex flex-col gap-4">
-          <h2 id="skills" className="text-lg font-semibold">
-            {ABOUT_PAGE.skillsHeading}
-          </h2>
-          {/* A <dl>: each group is a label (area) with a value (its skills), which is
-              exactly what description lists exist to mark up. */}
-          <dl className="border-border/70 max-w-measure m-0 flex flex-col border-t">
-            {ABOUT_PAGE.skills.map((group) => (
-              <div
-                key={group.area}
-                className="border-border/70 grid grid-cols-1 gap-x-8 gap-y-1 border-b py-4 last:border-b-0 sm:grid-cols-3"
-              >
-                <dt className="text-muted text-sm font-medium tracking-wider uppercase">
-                  {group.area}
-                </dt>
-                <dd className="m-0 break-words sm:col-span-2">
-                  {group.items.join(", ")}
-                </dd>
-              </div>
+          <section
+            aria-labelledby="background"
+            className="max-w-measure flex flex-col gap-3"
+          >
+            <h2 id="background" className="text-lg font-semibold">
+              {ABOUT_PAGE.bioHeading}
+            </h2>
+            {ABOUT_PAGE.bio.map((paragraph, index) => (
+              // Index key is safe: the list is a static constant, never reordered.
+              <p key={index} className="text-muted break-words">
+                {paragraph}
+              </p>
             ))}
-          </dl>
-        </section>
+          </section>
 
-        <Timeline
-          id="experience"
-          heading={ABOUT_PAGE.experienceHeading}
-          entries={ABOUT_PAGE.experience}
-        />
-        <Timeline
-          id="education"
-          heading={ABOUT_PAGE.educationHeading}
-          entries={ABOUT_PAGE.education}
-        />
+          <section aria-labelledby="skills" className="flex flex-col gap-4">
+            <h2 id="skills" className="text-lg font-semibold">
+              {ABOUT_PAGE.skillsHeading}
+            </h2>
+            {/* A <dl>: each group is a label (area) with a value (its skills), which is
+              exactly what description lists exist to mark up. */}
+            <dl className="border-border/70 max-w-measure m-0 flex flex-col border-t">
+              {ABOUT_PAGE.skills.map((group) => (
+                <div
+                  key={group.area}
+                  className="border-border/70 grid grid-cols-1 gap-x-8 gap-y-1 border-b py-4 last:border-b-0 sm:grid-cols-3"
+                >
+                  <dt className="text-muted text-sm font-medium tracking-wider uppercase">
+                    {group.area}
+                  </dt>
+                  <dd className="m-0 break-words sm:col-span-2">
+                    {group.items.join(", ")}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-        {containsPlaceholder(ABOUT_PAGE) ? <PlaceholderNotice /> : null}
-      </div>
-    </section>
+          <Timeline
+            id="experience"
+            heading={ABOUT_PAGE.experienceHeading}
+            entries={ABOUT_PAGE.experience}
+          />
+          <Timeline
+            id="education"
+            heading={ABOUT_PAGE.educationHeading}
+            entries={ABOUT_PAGE.education}
+          />
+
+          {containsPlaceholder(ABOUT_PAGE) ? <PlaceholderNotice /> : null}
+        </div>
+      </section>
+    </PageTransition>
   );
 }
 
@@ -132,6 +138,9 @@ function Headshot(): JSX.Element {
  * @param props.entries - Entries to list, already in display order.
  * @returns A labelled `<section>` with an `<ol>` (order is meaningful: most recent first).
  *   Each entry's title is an `<h3>` so screen-reader users can jump between entries.
+ *   Returns `null` when `entries` is empty, so a section with nothing to list (e.g.
+ *   experience before a first job) disappears instead of rendering a bare heading; adding
+ *   an entry in `lib/site.ts` brings it back with no code change.
  */
 function Timeline({
   id,
@@ -141,7 +150,8 @@ function Timeline({
   readonly id: string;
   readonly heading: string;
   readonly entries: readonly TimelineEntry[];
-}): JSX.Element {
+}): JSX.Element | null {
+  if (entries.length === 0) return null;
   return (
     <section aria-labelledby={id} className="max-w-measure flex flex-col gap-4">
       <h2 id={id} className="text-lg font-semibold">

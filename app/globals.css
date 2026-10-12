@@ -8,22 +8,22 @@
  *      radii, fonts. Tailwind v4 is configured *in CSS*, so this block is the equivalent
  *      of a `tailwind.config.ts`. There is deliberately no such file in this repo; one
  *      would be ignored by `@tailwindcss/postcss`.
- *   3. The light/dark theme resolution rules for all three theme states (explicit light,
- *      explicit dark, and "follow the system" when no explicit choice is stored).
- *   4. A very small amount of base styling: body background/foreground and a global
- *      focus-visible ring.
+ *   3. The page canvas: ONE fixed look, a soft deep-maroon glow in the bottom-left corner
+ *      that fades to black toward the top-right, with light-on-dark text everywhere.
+ *   4. A very small amount of base styling: body foreground, the gradient layer, and a
+ *      global focus-visible ring.
  *
- * How it fits: `app/layout.tsx` imports this file once, so every route gets it. The
- * `data-theme` attribute the rules below key off is written to `<html>` by the inline
- * bootstrap script in `app/layout.tsx` and updated at runtime by `lib/useTheme.ts`.
+ * SINGLE-PALETTE MODEL. There is no light/dark theme, no theme toggle, no `data-theme`
+ * attribute, no `prefers-color-scheme` rule, and no pre-paint script. Every color is a
+ * literal value in the `@theme` block below, defined unconditionally — nothing about the
+ * palette depends on the visitor's OS setting, storage, or JavaScript. `color-scheme: dark`
+ * on `:root` makes native UI (scrollbars, form controls, the overscroll canvas) match the
+ * dark page. If a light variant is ever wanted again, it must be designed against the
+ * gradient from scratch; the old light values were removed, not hidden.
  *
- * ORDERING REQUIREMENT (do not reorder the blocks at the bottom of this file):
- *   `:root` light values  →  `@media (prefers-color-scheme: dark)` scoped to
- *   `:root:not([data-theme])`  →  `:root[data-theme="dark"]`.
- *   Every color has a light definition on bare `:root`, so the document is never
- *   dependent on a media query for a value. The media query is scoped to "no explicit
- *   choice recorded" so a visitor who picked Light is not overridden by a dark OS
- *   setting, and the explicit-dark selector comes last so it wins regardless of OS.
+ * How it fits: `app/layout.tsx` imports this file once, so every route gets it.
+ * Components consume only the `--color-*` tokens (via Tailwind utilities such as
+ * `bg-surface`, `text-muted`, `border-outline`); none of them knows the gradient exists.
  */
 
 @import "tailwindcss";
@@ -31,39 +31,59 @@
 /* ---------------------------------------------------------------------------
  * Design system
  *
- * PALETTE — six colors, no more. The brief is a professional portfolio for someone
- * selling a voice: the page should read as paper and ink with one accent, so that the
- * audio player added in Phase 2 is the only loud thing on screen.
- *   bg       page canvas
- *   surface  raised panels (cards, the player shell) — one step off the canvas
+ * PALETTE — seven tokens, no more, on a maroon-to-black gradient canvas. The look is
+ * deliberately restrained: warm off-white type, one warm-gold accent, and the gradient
+ * as the only large field of color.
+ *   bg       solid canvas color, and the base the gradient layer is painted over
+ *   surface  raised panels (cards, the skip-link pill) — opaque, see below
  *   fg       primary text
  *   muted    secondary text: metadata, captions, footer
  *   border   hairlines and dividers ONLY — see the note below
  *   outline  the boundary of an interactive control
  *   accent   interactive affordances and focus rings, used sparingly
  *
+ * CONTRAST IS MEASURED AGAINST THE WORST CASE OF THE GRADIENT. Light text loses contrast
+ * as the backdrop gets lighter, and the lightest point anywhere on the canvas is the
+ * deep-maroon corner, `--gradient-maroon` (`#2e0606`). Every ratio is therefore quoted
+ * against `#2e0606` first and black second; any point in between (sRGB interpolation, as
+ * browsers paint it) lies between the two numbers. If `--gradient-maroon` is ever made
+ * lighter, every ratio below must be recomputed — light text only loses contrast. The per-token ratios sit next to the
+ * values in the `@theme` block. The nav's `bg-bg/85` wash only darkens whatever is under
+ * it, so text in the header is always at least as well contrasted as on raw maroon.
+ *
+ * WHY `surface` IS OPAQUE. A translucent panel would composite to a different color at
+ * every point of the gradient, so the contrast of the text inside a card would depend on
+ * where on the page the card happens to sit. An opaque warm near-black (`#1a0d0e`) gives
+ * every card one deterministic pairing, and it also keeps the skip-link pill (which
+ * overlaps the nav wordmark when focused) from letting the text underneath show through.
+ * The card's own `border-border` hairline is what separates it from the black end.
+ *
  * `border` VS `outline` — these are two different jobs and must never be collapsed back
- * into one token. `border` is a *decorative hairline*: the rule under the sticky nav and
- * the one above the footer. It is deliberately low-contrast (measured 1.28:1 against `bg`
- * in light, 1.37:1 in dark) because a 3:1 rule spanning the full page width reads as a
- * heavy slab on a paper-and-ink palette. `outline` is a *control boundary*: the thing
- * that tells a visitor where a button begins and ends, which WCAG 1.4.11 requires to
- * reach 3:1. Measured, `outline` clears 3:1 against BOTH `bg` and `surface` within its
- * own theme (light 3.25:1 / 3.39:1; dark 3.54:1 / 3.26:1), so a control is delineated
- * wherever it is placed — the property the Phase 2 audio player's seek track and
- * transport controls depend on. Raising `border` instead of adding `outline` would fix
- * the buttons and wreck the page rules; using `muted` as the boundary passes at ~6:1 but
- * reads as a hard stroke. Hue is preserved in both: `#8f8b85` keeps the warm cast of
- * `#e2ded8`, `#686b72` the cool cast of `#2a2d34`.
+ * into one token. `border` is a *decorative hairline*: the rule under the sticky nav, the
+ * one above the footer, list dividers, link underlines. It is deliberately low-contrast
+ * (1.54:1 on maroon, 1.44:1 on black; 1.31:1 / 1.25:1 at the `/70` modifier most rules
+ * use) because WCAG 1.4.11 does not apply to decorative separators and a 3:1 rule
+ * spanning the full page width reads as a heavy slab. It is translucent white rather than
+ * an opaque grey ON PURPOSE: an opaque mid-dark grey is lighter than black but darker
+ * than maroon, so somewhere in the middle of the gradient it would match the canvas and
+ * the rule would vanish. A white wash always lightens what is under it, so the hairline
+ * is visible — and equally quiet — at every point. `outline` is a *control boundary*:
+ * the thing that tells a visitor where a button begins and ends, which WCAG 1.4.11
+ * requires to reach 3:1. It clears 3:1 against maroon, black, and `surface`, so a
+ * control is delineated wherever it is placed.
  * ONE DOCUMENTED EXCEPTION to "controls only": the reserved headshot slot in
  * `app/about/page.tsx` uses `border-dashed border-outline`. It is not a control, but it is
- * the largest element in that page's header and `border` left it at 1.19:1 — visually
- * indistinguishable from a broken image. The rule the exception preserves is the real one:
- * `border` is for hairlines between things, `outline` is for the edge of a thing that must
- * be perceivable as an object. Do not read it as a licence to use `outline` for emphasis.
+ * the largest element in that page's header and `border` would leave it reading as a
+ * broken image. The rule the exception preserves is the real one: `border` is for
+ * hairlines between things, `outline` is for the edge of a thing that must be perceivable
+ * as an object. Do not read it as a licence to use `outline` for emphasis.
  * The `--color-*: initial` reset removes Tailwind's default 250-color palette, so
  * `bg-red-500` and friends stop existing. That is intentional: the only way to use an
  * off-palette color is to add it here, which forces the decision to be deliberate.
+ *
+ * GRADIENT STOPS. `--gradient-maroon` and `--gradient-black` below are the canvas
+ * gradient's two ends. They are plain custom properties on `:root`, NOT `--color-*`
+ * tokens, so they never become utilities: no component should paint with them directly.
  *
  * TYPE SCALE — five sizes and nothing else, on a ~1.25 ratio. `--text-*: initial`
  * removes Tailwind's default scale for the same reason as the palette.
@@ -81,18 +101,36 @@
  * ------------------------------------------------------------------------- */
 
 @theme {
-  /* -- palette (values resolve per-theme via the variables at the bottom) -- */
+  /* -- palette: literal values, one set, no per-theme indirection. Ratios are WCAG 2.1,
+        computed against the gradient's worst case (#2e0606) and its other end (#000000);
+        see the PALETTE note above. -- */
   --color-*: initial;
   --color-transparent: transparent;
   --color-current: currentColor;
 
-  --color-bg: var(--theme-bg);
-  --color-surface: var(--theme-surface);
-  --color-fg: var(--theme-fg);
-  --color-muted: var(--theme-muted);
-  --color-border: var(--theme-border);
-  --color-outline: var(--theme-outline);
-  --color-accent: var(--theme-accent);
+  /* Solid black, not maroon. Three reasons: (1) it is the canvas painted under the
+     gradient layer and in iOS overscroll, and black is the highest-contrast fallback for
+     light text should the gradient layer ever fail to paint; (2) the sticky nav's
+     `bg-bg/85` wash should DARKEN whatever scrolls beneath it, which keeps nav text
+     contrast at or above its raw-maroon figure; (3) black is the gradient's top-right end,
+     where the nav sits, so the wash blends into the canvas there instead of tinting it. */
+  --color-bg: #000000;
+  /* Opaque warm near-black. 1.10:1 vs black, 1.03:1 vs maroon — a panel, not a control;
+     its `border` hairline delineates it (it is nearly the canvas color on purpose). Text on it: fg 16.63:1, muted 8.66:1. */
+  --color-surface: #1a0d0e;
+  /* 16.10:1 on maroon, 18.43:1 on black, 16.63:1 on surface. */
+  --color-fg: #f5efeb;
+  /* 8.38:1 on maroon, 9.60:1 on black, 8.66:1 on surface. Body-text AA (4.5) everywhere. */
+  --color-muted: #bcaca7;
+  /* Decorative hairline, white at 16%. Composited: 1.54:1 on maroon, 1.44:1 on black,
+     1.58:1 on surface; at `/70`: 1.31:1 / 1.25:1 / 1.34:1. Deliberately below 3:1 — see
+     the `border` vs `outline` note. Never use it to bound a control. */
+  --color-border: rgb(255 255 255 / 0.16);
+  /* Control boundary. 5.76:1 on maroon, 6.59:1 on black, 5.95:1 on surface. */
+  --color-outline: #a08c86;
+  /* Warm gold. 10.43:1 on maroon, 11.94:1 on black, 10.78:1 on surface — clears 3:1 as a
+     focus ring / control border AND 4.5:1 as text (`PlaceholderNotice` uses `text-accent`). */
+  --color-accent: #f2b880;
 
   /* -- type scale -- */
   --text-*: initial;
@@ -155,61 +193,38 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Theme state 1 — LIGHT, and the baseline for every color in the system.
- * Bare `:root`, no media query. If a color is not defined here it is a bug.
+ * The one and only palette scope. Bare `:root`, no media query, no attribute selector.
  * ------------------------------------------------------------------------- */
 :root {
-  color-scheme: light;
-  --theme-bg: #fbfaf8;
-  --theme-surface: #ffffff;
-  --theme-fg: #16181d;
-  --theme-muted: #5d626e;
-  --theme-border: #e2ded8;
-  /* 3.25:1 vs --theme-bg, 3.39:1 vs --theme-surface. Control boundaries only. */
-  --theme-outline: #8f8b85;
-  --theme-accent: #9a4a2f;
-}
-
-/* ---------------------------------------------------------------------------
- * Theme state 2 — SYSTEM DEFAULT (no stored choice, OS prefers dark).
- * Scoped to `:not([data-theme])` so it only applies before/without an explicit choice.
- * ------------------------------------------------------------------------- */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-    --theme-bg: #101114;
-    --theme-surface: #181a1f;
-    --theme-fg: #eceae6;
-    --theme-muted: #9a9ea9;
-    --theme-border: #2a2d34;
-    /* 3.54:1 vs --theme-bg, 3.26:1 vs --theme-surface. Control boundaries only. */
-    --theme-outline: #686b72;
-    --theme-accent: #e79070;
-  }
-}
-
-/* ---------------------------------------------------------------------------
- * Theme state 3 — EXPLICIT DARK. Last, so it beats the media query above on a
- * light-preferring OS. (`data-theme="light"` needs no block: `:root` already is light.)
- * ------------------------------------------------------------------------- */
-:root[data-theme="dark"] {
+  /* Native controls, scrollbars, and the UA canvas render in their dark variants so
+     nothing browser-drawn flashes white against the gradient. */
   color-scheme: dark;
-  --theme-bg: #101114;
-  --theme-surface: #181a1f;
-  --theme-fg: #eceae6;
-  --theme-muted: #9a9ea9;
-  --theme-border: #2a2d34;
-  /* 3.54:1 vs --theme-bg, 3.26:1 vs --theme-surface. Control boundaries only. */
-  --theme-outline: #686b72;
-  --theme-accent: #e79070;
+  /* Deep, desaturated maroon — dark enough to read as a glow rather than a color field.
+     Matched to the reference look the owner supplied (a near-black UI with a faint maroon
+     cast in the bottom-left): sampled there at roughly #1a0402–#260504. */
+  --gradient-maroon: #2e0606;
+  --gradient-black: #000000;
+  /* Project-card glow (see `.project-card` below). Resting glow is a whisper of the page's
+     maroon; the hover glow is brighter. Text contrast is computed against the HOVER value
+     at full strength (the worst case, at the card's bottom-left corner): fg 13.64:1,
+     muted 7.10:1, outline 4.88:1, accent 8.84:1 — all still clear AA. Brighten either
+     value and those numbers must be recomputed. */
+  --card-glow: #2a0709;
+  --card-glow-hover: #4a0c10;
 }
 
 /* ---------------------------------------------------------------------------
  * Base element styling. Kept minimal — everything else is a utility at the call site.
  * ------------------------------------------------------------------------- */
 body {
-  /* Explicit token-backed background: the canvas must never fall through to the UA white,
-     which would flash against a dark theme. */
+  /* Solid token-backed background. Because `<html>` sets no background of its own, CSS
+     PROPAGATES this to the canvas (CSS Backgrounds 3, §2.11.2): the whole viewport,
+     including iOS rubber-band overscroll, is painted black, and the body box itself paints
+     nothing. That propagation is load-bearing — it is what lets the `body::before`
+     gradient layer below (z-index -1) show through the body. Do NOT add a background to
+     `html`: the body's background would then stop propagating, paint on the body box,
+     and cover the gradient. `getComputedStyle(body).backgroundColor` still reports
+     `--color-bg`, which is what tests and tooling read as the canvas color. */
   background-color: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
@@ -248,6 +263,63 @@ body {
      make for you; this rule is what makes that constraint, once established, actually
      hold against arbitrary content. */
   overflow-wrap: break-word;
+}
+
+/* THE CANVAS GRADIENT — a soft deep-maroon glow radiating from the bottom-left corner,
+   fading to black toward the top-right.
+
+   SHAPE. A radial ellipse centred ON the bottom-left corner (`at 0% 100%`) and sized to
+   the farthest corner, rather than a straight linear gradient: the glow falls off in every
+   direction from that corner, so the left edge and the bottom edge both carry a little
+   maroon while the right side and top go black — the way the reference look does. Three
+   stops ease the fall-off: full maroon at the corner, a half-strength mix (`color-mix`)
+   at 35%, and black from 80% outward, so there is no visible band where the color ends.
+
+   HOW IT IS ATTACHED, AND WHY THIS WAY. A viewport-sized `position: fixed` pseudo-element
+   behind all content, rather than a background on `body` or `html`:
+     - `background-attachment: fixed` on `body` is the obvious route, but iOS Safari
+       ignores it (it treats it as `scroll`, sizing the gradient to the whole document)
+       and desktop engines repaint the full background on every scroll frame with it.
+     - A plain background on `html`/`body` with `min-height: 100%` covers short pages,
+       but on a long page the gradient stretches across the whole DOCUMENT, so any one
+       screenful shows a near-flat slice and "maroon bottom-left" is only true at the very
+       end of the page. A repeating default would also visibly restart past the first tile.
+     - A fixed layer is always exactly one viewport: every screen shows the full
+       corner-to-corner gradient, short pages have no blank band (it does not depend on
+       content height at all), long pages cannot tile, and the layer is promoted to its
+       own compositor layer and never repainted on scroll — no jank.
+   `100lvh` (largest viewport height) sizes it to the viewport with mobile browser
+   toolbars RETRACTED, so when Safari's toolbar slides away mid-scroll there is no
+   uncovered strip at the bottom; `100vh` precedes it as the fallback for engines without
+   the `lvh` unit (on iOS, `vh` already means the large viewport).
+
+   STACKING. `z-index: -1` places the layer in the root stacking context above the
+   propagated black canvas and below every in-flow box. That only works while `body`
+   creates no stacking context of its own (no `z-index`, `transform`, `filter`, `opacity`
+   below 1, or `isolation` on `body`) — adding one would trap the layer above the body's
+   (propagated, so transparent) background, which happens to look identical today but
+   should be re-checked if anyone touches it. `pointer-events: none` keeps it out of hit
+   testing entirely.
+
+   `body::before` and not an extra `<div>`: purely decorative, so it must not appear in
+   the accessibility tree or the DOM order the keyboard tests walk. `body` is a flex
+   container, but a fixed-position pseudo-element is out of flow and is not a flex item. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    ellipse farthest-corner at 0% 100%,
+    var(--gradient-maroon) 0%,
+    color-mix(in srgb, var(--gradient-maroon) 45%, var(--gradient-black)) 35%,
+    var(--gradient-black) 80%
+  );
 }
 
 /* One focus treatment for the entire site, so no interactive element can ship without a
@@ -314,5 +386,178 @@ input[type="range"]:focus-visible {
      scrolling is added, which is exactly the bug nobody finds. */
   html {
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * PROJECT CARDS — a soft glow and a hover state. Applied by `components/ProjectCard.tsx`
+ * through the `project-card` class (alongside its Tailwind utilities). Written as plain
+ * CSS rather than utilities because it needs a pseudo-element and `:has()`.
+ *
+ * RESTING. The card keeps its opaque `bg-surface` color; on top of it, a radial glow from
+ * the bottom-left corner echoes the page canvas so the cards feel part of the same scene.
+ *
+ * HOVER. Two quiet changes, no movement: the glow brightens (a second, stronger glow on
+ * `::before` fades in — gradients cannot be transitioned directly, opacity can) and the
+ * hairline border warms toward the gold accent. The border stays decorative; the card is
+ * not itself a control, so WCAG 1.4.11 does not apply to it.
+ *
+ * KEYBOARD PARITY. The card is not clickable — only the links inside it are — so the
+ * same state is shown when one of those links has keyboard focus (`:has(a:focus-visible)`).
+ * A keyboard user tabbing into a card sees exactly what a mouse user sees on hover.
+ *
+ * `:hover` sits inside `@media (hover: hover)` so a tap on a touchscreen does not leave a
+ * card "stuck" in its hover state. Reduced motion: the global reduced-motion rule shortens
+ * the transitions to ~0, so the change is instant rather than removed.
+ *
+ * STACKING. `isolation: isolate` makes the card its own stacking context, so the
+ * `z-index: -1` glow paints above the card's background but below its text — without it,
+ * the glow would drop behind the page itself. `border-radius: inherit` rounds the glow to
+ * the card's corners WITHOUT `overflow: hidden`, which would clip the focus rings of the
+ * links inside the card.
+ *
+ * Unlayered on purpose: Tailwind's utilities live in `@layer utilities`, and unlayered
+ * rules win over layered ones, so the hover border color overrides `border-border`.
+ * ------------------------------------------------------------------------- */
+.project-card {
+  position: relative;
+  isolation: isolate;
+  /* Two layers, first one on top: the maroon corner glow (bottom-left), and beneath it a
+     fade to black from the top-right corner — the same diagonal as the page canvas.
+     Darkening only RAISES contrast for the card's light text, so no ratio needs redoing. */
+  background-image:
+    radial-gradient(
+      ellipse farthest-corner at 0% 100%,
+      var(--card-glow) 0%,
+      /* Fades out by 45% of the way to the far corner, so the resting glow stays tucked
+       into the bottom-left instead of washing across the card. */
+      transparent 45%
+    ),
+    radial-gradient(
+      ellipse farthest-corner at 100% 0%,
+      var(--gradient-black) 0%,
+      transparent 60%
+    );
+  transition: border-color 120ms ease;
+}
+
+.project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(
+    ellipse farthest-corner at 0% 100%,
+    var(--card-glow-hover) 0%,
+    transparent 75%
+  );
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+/* Gold at 45% over the dark card: visibly warmer than the grey hairline, still quiet. */
+.project-card:has(a:focus-visible) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+.project-card:has(a:focus-visible)::before {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .project-card:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .project-card:hover::before {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * SCREEN-EDGE GLITCH — styling for `components/EdgeGlitch.tsx`.
+ *
+ * Every 6–10 seconds a short burst of small boxes pops in and out at random spots along
+ * the left and right edges of the window. The component decides where and when (randomly, so every
+ * burst differs); these rules decide what a box looks like.
+ *
+ * TO REMOVE: delete `<EdgeGlitch />` and its import from `app/layout.tsx`, delete
+ * `components/EdgeGlitch.tsx`, and delete this block.
+ *
+ * `.edge-glitch` is a fixed, full-viewport layer drawn above the content (`z-index: 100`,
+ * over the sticky nav) so boxes are never hidden — but it is empty apart from the boxes
+ * and has `pointer-events: none`, so it never blocks a click, a scroll, or a text
+ * selection. Boxes are absolutely positioned inside it by the component.
+ *
+ * SAFETY. Boxes are a few pixels each and live ~70–220ms, a tiny fraction of the screen —
+ * far below WCAG 2.3.1's flash-area threshold. Reduced-motion visitors never get a burst
+ * (the component checks `prefers-reduced-motion`). `aria-hidden` on the layer keeps it
+ * out of the accessibility tree.
+ * ------------------------------------------------------------------------- */
+.edge-glitch {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.edge-glitch-box {
+  position: absolute;
+}
+/* RGB-split pair plus the site's maroon. Slight translucency keeps them from looking like
+   solid UI elements. */
+.edge-glitch-box--red {
+  background: rgb(255 60 90 / 0.8);
+}
+.edge-glitch-box--cyan {
+  background: rgb(0 220 255 / 0.65);
+}
+.edge-glitch-box--maroon {
+  background: rgb(150 20 35 / 0.9);
+}
+
+/* ---------------------------------------------------------------------------
+ * PAGE FADE — the quick fade-out / fade-in when moving between pages.
+ *
+ * `components/PageTransition.tsx` wraps each page in React's `<ViewTransition>` with the
+ * `page-fade` class; the browser's View Transitions API snapshots the old page and the new
+ * one, and these rules animate the two snapshots. The old content fades out fast (120ms),
+ * then the new content fades in (200ms, starting at 100ms so the two barely overlap and
+ * the text never looks doubled). Total ≈ 300ms: noticeable, never in the way.
+ *
+ * The nav, footer and background are not part of the `page-fade` group, so they stay
+ * still. Browsers without the API skip all of this and swap pages instantly.
+ * ------------------------------------------------------------------------- */
+::view-transition-old(.page-fade) {
+  animation: 120ms ease-in both page-fade-out;
+}
+::view-transition-new(.page-fade) {
+  animation: 200ms ease-out 100ms both page-fade-in;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* While a transition runs, the browser lays an overlay over the page that swallows
+   clicks. Let them through, so a fast second click is never lost. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* Reduced motion: the global `*` rule above does not reach view-transition
+   pseudo-elements, so they are zeroed here explicitly — pages swap instantly. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

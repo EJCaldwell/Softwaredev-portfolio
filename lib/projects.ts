@@ -54,7 +54,7 @@ export const PROJECTS: readonly Project[] = [
     slug: "portfolio-site",
     title: "Developer Portfolio",
     summary:
-      "This site. A Next.js app with a system-aware light/dark theme, URL-driven project filtering, and automated accessibility, contrast and layout tests run in Chromium and WebKit.",
+      "This site. A Next.js app with a soft maroon-to-black background, URL-driven project filtering, and automated accessibility, contrast and layout tests run in Chromium and WebKit.",
     tech: [
       "TypeScript",
       "Next.js",

@@ -32,9 +32,9 @@ export const SITE = {
   role: "Software Developer",
   /**
    * One-line positioning statement — the hero's lead sentence.
-   * PLACEHOLDER: replace with what you build and what you're looking for.
    */
-  tagline: `${PLACEHOLDER_MARKER}: one sentence on what you build and what kind of role or work you're looking for.`,
+  tagline:
+    "I build web apps and APIs by day and games whenever I can, while studying Software Development.",
   /** Document `<meta name="description">`. Keep under ~160 characters. */
   description:
     "Portfolio of Ethan Caldwell, software developer — projects, skills, and contact information.",
@@ -112,11 +112,12 @@ export const PROJECTS_PAGE = {
   /** Document `<title>` leaf; the root layout appends the name. */
   metaTitle: "Projects",
   /** Document description for this route. */
-  metaDescription: `Software projects by ${SITE.name}, with source code and live demos.`,
+  metaDescription: `Software projects by ${SITE.name}, with source code.`,
   /** The page's single `<h1>`. */
   heading: "Projects",
   /** Lead paragraph under the heading. */
-  intro: `${PLACEHOLDER_MARKER}: a sentence framing these projects — personal, school, or professional, and what they show about how you work.`,
+  intro:
+    "A mix of school and personal projects: APIs, full-stack web apps, and the databases and tests behind them. I like to create things people can use and enjoy.",
   /** Accessible label for the tag-filter navigation landmark. */
   filterLabel: "Filter projects by technology",
   /** Label of the "show everything" filter chip. */
@@ -156,11 +157,12 @@ export const ABOUT_PAGE = {
   /** Document `<title>` leaf. */
   metaTitle: "About",
   /** Document description for this route. */
-  metaDescription: `About ${SITE.name}: background, skills, and experience.`,
+  metaDescription: `About ${SITE.name}: background, skills, and education.`,
   /** The page's single `<h1>`. */
   heading: `About ${SITE.name}`,
   /** Lead line under the h1. */
-  intro: `${PLACEHOLDER_MARKER}: one line summarising you — where you are in your career, where you're based, and what you focus on.`,
+  intro:
+    "Software Development student at Dixie Technical College, based in St. George, Utah. I build software across the stack, but game development is what I enjoy most of all.",
   /** Heading over the bio paragraphs. */
   bioHeading: "Background",
   /** Bio paragraphs, rendered one `<p>` each. */
@@ -174,31 +176,24 @@ export const ABOUT_PAGE = {
   skills: [
     {
       area: "Languages",
-      items: ["Python", "TypeScript (learning)", "C# (learning)"],
+      items: ["Python", "TypeScript", "C#"],
     },
     {
       area: "Frontend",
-      items: [
-        "React (learning)",
-        "Next.js (learning)",
-        "Tailwind CSS (learning)",
-      ],
+      items: ["React", "Next.js", "Tailwind CSS"],
     },
-    { area: "Backend", items: ["Python", "C# (learning)"] },
+    { area: "Backend", items: ["Python", "C#"] },
     { area: "Tools", items: ["Git", "Vitest", "Playwright"] },
+    { area: "AI", items: ["Claude", "Claude Code", "AI-assisted development"] },
     { area: "Platforms", items: ["macOS", "Windows"] },
   ] as readonly SkillGroup[],
   /** Heading over the experience timeline. */
   experienceHeading: "Experience",
-  /** Work history, most recent first. */
-  experience: [
-    {
-      title: `${PLACEHOLDER_MARKER}: role`,
-      organization: `${PLACEHOLDER_MARKER}: company`,
-      period: "20XX – present",
-      detail: `${PLACEHOLDER_MARKER}: one line on what you did there.`,
-    },
-  ] as readonly TimelineEntry[],
+  /**
+   * Work history, most recent first. Empty for now — no work experience yet, only school —
+   * and `/about` hides the section while it is empty. Add an entry here to show it again.
+   */
+  experience: [] as readonly TimelineEntry[],
   /** Heading over the education timeline. */
   educationHeading: "Education",
   /** Education history, most recent first. */

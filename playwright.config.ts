@@ -24,8 +24,8 @@
  *   - `webServer`: Playwright starts the app itself, so a run needs no manually started
  *     server and CI needs no background-process orchestration. Specifics:
  *       * It runs `npm run build && npm run start`, i.e. the PRODUCTION server, not
- *         `next dev`. That matters more than convenience here: the anti-flash theme
- *         bootstrap, static prerendering, and the real 404 route all behave differently
+ *         `next dev`. That matters more than convenience here: static
+ *         prerendering, production CSS output, and the real 404 route all behave differently
  *         under dev's on-demand compilation, and dev-mode overlays and HMR sockets add
  *         flake. E2E should test what ships.
  *       * `reuseExistingServer: !process.env.CI` — locally, if something is already
