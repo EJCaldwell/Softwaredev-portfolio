@@ -14,6 +14,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { JSX } from "react";
+import EdgeGlitch from "@/components/EdgeGlitch";
 import PageTransition from "@/components/PageTransition";
 import { SITE } from "@/lib/site";
 
@@ -43,14 +44,20 @@ export const metadata: Metadata = {
  */
 export default function NotFound(): JSX.Element {
   return (
-    // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
+    // Glitches this page's content out/in on navigation — see components/PageTransition.tsx.
     <PageTransition>
-      {/* max-w-page outer / max-w-measure inner: see the layout-widths note in
-      globals.css. The measure must nest inside the page container so its left
-      edge lands on the nav's left edge; centering 40rem on its own would offset
-      it ~200px at wide sizes. */}
-      <section className="max-w-page mx-auto px-6 py-12 md:py-16">
-        <div className="max-w-measure flex flex-col gap-6">
+      {/* Centered both ways. `not-found-page` turns <main> into a flex column on this
+        page only (see globals.css), so this section can `flex-1` to fill the space
+        between the nav and footer and center its content vertically. `w-full` keeps
+        the max-w-page container full-width inside that flex column (auto margins would
+        otherwise shrink it to its content). */}
+      <section className="not-found-page max-w-page mx-auto flex w-full flex-1 items-center justify-center px-6 py-12 md:py-16">
+        {/* data-glitch-zone: the constant 404 glitch measures its reach to this block's
+          edge, so the boxes fill the empty space either side of the text. */}
+        <div
+          data-glitch-zone
+          className="max-w-measure flex flex-col items-center gap-6 text-center"
+        >
           <p className="text-muted text-sm tracking-wider uppercase">404</p>
           <h1 className="text-2xl font-semibold">
             This page doesn&rsquo;t exist
@@ -59,7 +66,7 @@ export default function NotFound(): JSX.Element {
             The link may be out of date, or the page may have moved. The
             projects page is the best place to pick things back up.
           </p>
-          <p className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+          <p className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
             <Link
               href="/"
               className="border-outline hover:border-fg text-fg inline-flex items-center rounded-full border px-4 py-2 no-underline transition-colors"
@@ -81,6 +88,8 @@ export default function NotFound(): JSX.Element {
           </p>
         </div>
       </section>
+      {/* Non-stop, wider glitch for this page only; unmounts when the visitor leaves. */}
+      <EdgeGlitch mode="constant" />
     </PageTransition>
   );
 }

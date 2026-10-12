@@ -1,9 +1,10 @@
 /**
- * components/PageTransition.tsx — the quick fade-out / fade-in between top-level pages.
+ * components/PageTransition.tsx — the glitch transition between top-level pages.
  *
  * Owns: wrapping one route's content in React's `<ViewTransition>` so that navigating
- * between `/`, `/projects` and `/about` crossfades the page body instead of swapping it
- * instantly. The nav, footer and background stay put; only what is inside `<main>` fades.
+ * between `/`, `/projects` and `/about` glitches the old page out and the new one in
+ * instead of swapping it instantly. The nav, footer and background stay put; only what is inside `<main>`
+ * glitches.
  *
  * How it fits: each `page.tsx` (and `not-found.tsx`) wraps its returned markup in this
  * component. It must live in the PAGES, not in `app/layout.tsx`: layouts persist across
@@ -12,8 +13,9 @@
  * route navigations are React transitions, which is what activates the animation — no
  * client code or config is needed, so this stays a Server Component.
  *
- * The animation itself is the `page-fade` view-transition class, defined in
- * `app/globals.css` (fade-out ~120ms, then fade-in ~200ms). Reduced-motion users get an
+ * The animation itself is the `page-glitch` view-transition class, defined in
+ * `app/globals.css` (glitch-out ~180ms, then glitch-in ~240ms). `EdgeGlitch` fires a
+ * burst of edge boxes at the same moment. Reduced-motion users get an
  * instant swap via the reduced-motion block there.
  *
  * Browser support: Chromium 125+ and recent Safari/Firefox. Elsewhere the API is absent
@@ -24,7 +26,7 @@ import type { JSX, ReactNode } from "react";
 import { ViewTransition } from "react";
 
 /**
- * Fades its children out when the route is left and in when the route is entered.
+ * Glitches its children out when the route is left and in when the route is entered.
  *
  * @param props.children - The page's full content (everything the page renders inside
  *   the layout's `<main>`).
@@ -33,7 +35,7 @@ import { ViewTransition } from "react";
  *
  * `default="none"` matters: without it this boundary would also animate on any other
  * transition that touches the page — notably the `/projects?tag=` filter, which is a
- * same-route navigation and should update in place, not fade the whole page.
+ * same-route navigation and should update in place, not glitch the whole page.
  *
  * Side effects: none. Failure modes: none — if the browser lacks the View Transitions
  * API, React renders the children with no animation.
@@ -44,7 +46,7 @@ export default function PageTransition({
   readonly children: ReactNode;
 }): JSX.Element {
   return (
-    <ViewTransition enter="page-fade" exit="page-fade" default="none">
+    <ViewTransition enter="page-glitch" exit="page-glitch" default="none">
       {children}
     </ViewTransition>
   );

@@ -515,33 +515,103 @@ input[type="range"]:focus-visible {
   background: rgb(150 20 35 / 0.9);
 }
 
-/* ---------------------------------------------------------------------------
- * PAGE FADE — the quick fade-out / fade-in when moving between pages.
- *
- * `components/PageTransition.tsx` wraps each page in React's `<ViewTransition>` with the
- * `page-fade` class; the browser's View Transitions API snapshots the old page and the new
- * one, and these rules animate the two snapshots. The old content fades out fast (120ms),
- * then the new content fades in (200ms, starting at 100ms so the two barely overlap and
- * the text never looks doubled). Total ≈ 300ms: noticeable, never in the way.
- *
- * The nav, footer and background are not part of the `page-fade` group, so they stay
- * still. Browsers without the API skip all of this and swap pages instantly.
- * ------------------------------------------------------------------------- */
-::view-transition-old(.page-fade) {
-  animation: 120ms ease-in both page-fade-out;
-}
-::view-transition-new(.page-fade) {
-  animation: 200ms ease-out 100ms both page-fade-in;
+/* 404 PAGE CENTERING. On the 404 page only, <main> becomes a flex column so the page's
+   section (`.not-found-page`, which is `flex-1`) can stretch to fill the space between
+   the nav and footer and center its text vertically. Scoped with `:has()` so no other
+   page's layout changes. Browsers without `:has()` simply keep the text at the top. */
+main:has(.not-found-page) {
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes page-fade-out {
-  to {
+/* ---------------------------------------------------------------------------
+ * PAGE GLITCH — the transition when moving between pages.
+ *
+ * `components/PageTransition.tsx` wraps each page in React's `<ViewTransition>` with the
+ * `page-glitch` class; the browser's View Transitions API snapshots the old page and the
+ * new one, and these rules animate the two snapshots. At the same moment
+ * `components/EdgeGlitch.tsx` fires a burst of edge boxes.
+ *
+ *   OUT (old page, 180ms): jerks sideways, splits into red/cyan copies (two coloured
+ *   `drop-shadow`s), shows only torn horizontal strips (`clip-path: inset()`), then
+ *   vanishes.
+ *   IN (new page, 240ms, starting at 140ms): appears torn and split, jitters, and snaps
+ *   clean. The 40ms overlap means there is never a blank frame.
+ *
+ * `steps(1, end)` makes every keyframe SNAP instead of easing between them — glitches
+ * jump, they don't glide. The nav, footer and background are outside the `page-glitch`
+ * group, so they stay perfectly still; only the page content glitches.
+ *
+ * SAFETY. Under 0.5s in total, a handful of frames, and the colour split is a thin 3px
+ * fringe on text — far below WCAG 2.3.1's flash thresholds. Reduced-motion visitors get
+ * an instant swap (the block at the end of this file zeroes every view-transition
+ * animation). Browsers without the View Transitions API swap instantly.
+ *
+ * TO SWITCH BACK to the plain fade used before (2026-10-12): rename `page-glitch` to
+ * `page-fade` in PageTransition.tsx and replace this block's rules with:
+ *   ::view-transition-old(.page-fade) { animation: 120ms ease-in both page-fade-out; }
+ *   ::view-transition-new(.page-fade) { animation: 200ms ease-out 100ms both page-fade-in; }
+ *   @keyframes page-fade-out { to { opacity: 0; } }
+ *   @keyframes page-fade-in { from { opacity: 0; } }
+ * and, to drop the edge burst too, remove the route-change effect in EdgeGlitch.tsx.
+ * ------------------------------------------------------------------------- */
+::view-transition-old(.page-glitch) {
+  animation: 180ms steps(1, end) both page-glitch-out;
+}
+::view-transition-new(.page-glitch) {
+  animation: 240ms steps(1, end) 140ms both page-glitch-in;
+}
+
+@keyframes page-glitch-out {
+  0% {
+    translate: 0 0;
+    clip-path: inset(0);
+    filter: none;
+    opacity: 1;
+  }
+  20% {
+    translate: -6px 0;
+    clip-path: inset(8% 0 52% 0);
+    filter: drop-shadow(-3px 0 rgb(255 60 90 / 0.8))
+      drop-shadow(3px 0 rgb(0 220 255 / 0.7));
+  }
+  45% {
+    translate: 5px 0;
+    clip-path: inset(48% 0 18% 0);
+  }
+  70% {
+    translate: -3px 0;
+    clip-path: inset(0 0 72% 0);
+    opacity: 0.6;
+  }
+  100% {
     opacity: 0;
   }
 }
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
+
+@keyframes page-glitch-in {
+  0% {
+    opacity: 1;
+    translate: 6px 0;
+    clip-path: inset(58% 0 12% 0);
+    filter: drop-shadow(-3px 0 rgb(255 60 90 / 0.8))
+      drop-shadow(3px 0 rgb(0 220 255 / 0.7));
+  }
+  30% {
+    translate: -4px 0;
+    clip-path: inset(12% 0 48% 0);
+  }
+  60% {
+    translate: 2px 0;
+    clip-path: inset(0);
+    filter: drop-shadow(-1px 0 rgb(255 60 90 / 0.6))
+      drop-shadow(1px 0 rgb(0 220 255 / 0.5));
+  }
+  100% {
+    translate: 0 0;
+    clip-path: inset(0);
+    filter: none;
+    opacity: 1;
   }
 }
 

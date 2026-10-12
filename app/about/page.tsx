@@ -32,7 +32,7 @@ export const metadata = {
  */
 export default function AboutPage(): JSX.Element {
   return (
-    // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
+    // Glitches this page's content out/in on navigation — see components/PageTransition.tsx.
     <PageTransition>
       <section className="max-w-page mx-auto px-6 py-12 md:py-16">
         <div className="flex flex-col gap-12">
