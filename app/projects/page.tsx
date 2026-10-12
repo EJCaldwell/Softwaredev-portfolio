@@ -43,7 +43,7 @@ export default async function ProjectsPage({
   return (
     // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
     <PageTransition>
-      <section className="max-w-page mx-auto px-6 py-12 md:py-24">
+      <section className="max-w-page mx-auto px-6 py-12 md:py-16">
         <div className="flex flex-col gap-12">
           <header className="max-w-measure flex flex-col gap-4">
             <h1 className="text-2xl font-semibold">{PROJECTS_PAGE.heading}</h1>

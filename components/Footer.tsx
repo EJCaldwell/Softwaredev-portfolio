@@ -43,7 +43,7 @@ export default function Footer(): JSX.Element {
   return (
     /* Decorative hairline: stays on the low-contrast `border` token deliberately.
        `outline` is for control boundaries only. */
-    <footer className="border-border/70 mt-24 border-t">
+    <footer className="border-border/70 border-t">
       <div className="text-muted max-w-page mx-auto flex flex-wrap items-center justify-between gap-x-8 gap-y-2 px-6 py-8 text-sm">
         <p>
           © {year} {SITE.name}

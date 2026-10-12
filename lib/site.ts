@@ -167,12 +167,12 @@ export const ABOUT_PAGE = {
   bioHeading: "Background",
   /** Bio paragraphs, rendered one `<p>` each. */
   bio: [
-    `${PLACEHOLDER_MARKER}: how you got into software and what you enjoy building.`,
-    `${PLACEHOLDER_MARKER}: what you're working on or learning now, and what you're looking for next.`,
+    "I've known I wanted to program for a living since I was young. I've always loved games and wanted to make my own. Around age 10, I was building games with block code and really bad art. My coding has improved a lot since then; my art skills, not so much. In middle school I entered a coding competition and somehow placed in the top three with my little wave shooter. Now, in my free time, I work on full-scale games in Godot and C# with friends who love making them as much as I do, and I write all of my game code without AI.",
+    "I'm currently studying Software Development to grow my skills as a developer. I've built several web apps in school, and I prefer to write code by hand whenever I can, bringing in Claude Code when AI genuinely helps. Right now I'm building TableTopChaos, an online tabletop RPG where you and your friends can go on whatever adventure you want. Next, I'm looking for my first job in the field, somewhere I can start out, keep learning, and grow as a developer.",
   ] as readonly string[],
   /** Heading over the skills list. */
   skillsHeading: "Skills",
-  /** Skills grouped by area. PLACEHOLDER: replace the items with your real stack. */
+  /** Skills grouped by area, rendered as a `<dl>` on `/about`. */
   skills: [
     {
       area: "Languages",
@@ -182,7 +182,11 @@ export const ABOUT_PAGE = {
       area: "Frontend",
       items: ["React", "Next.js", "Tailwind CSS"],
     },
-    { area: "Backend", items: ["Python", "C#"] },
+    {
+      area: "Backend",
+      items: ["Python", "C#", "FastAPI", "PostgreSQL", "Supabase"],
+    },
+    { area: "Game dev", items: ["Godot", "C#"] },
     { area: "Tools", items: ["Git", "Vitest", "Playwright"] },
     { area: "AI", items: ["Claude", "Claude Code", "AI-assisted development"] },
     { area: "Platforms", items: ["macOS", "Windows"] },

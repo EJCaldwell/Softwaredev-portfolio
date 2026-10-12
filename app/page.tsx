@@ -50,8 +50,8 @@ export default function HomePage(): JSX.Element {
   return (
     // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
     <PageTransition>
-      <section className="max-w-page mx-auto px-6 py-12 md:py-24">
-        <div className="flex flex-col gap-24">
+      <section className="max-w-page mx-auto px-6 py-12 md:py-16">
+        <div className="flex flex-col gap-16">
           <header className="max-w-measure flex flex-col gap-6">
             <div className="flex flex-col gap-4">
               <p className="text-muted text-sm tracking-wider uppercase">

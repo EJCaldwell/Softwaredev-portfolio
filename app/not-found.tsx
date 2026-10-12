@@ -49,7 +49,7 @@ export default function NotFound(): JSX.Element {
       globals.css. The measure must nest inside the page container so its left
       edge lands on the nav's left edge; centering 40rem on its own would offset
       it ~200px at wide sizes. */}
-      <section className="max-w-page mx-auto px-6 py-24">
+      <section className="max-w-page mx-auto px-6 py-12 md:py-16">
         <div className="max-w-measure flex flex-col gap-6">
           <p className="text-muted text-sm tracking-wider uppercase">404</p>
           <h1 className="text-2xl font-semibold">

@@ -34,34 +34,45 @@ export default function AboutPage(): JSX.Element {
   return (
     // Fades this page's content out/in on navigation — see components/PageTransition.tsx.
     <PageTransition>
-      <section className="max-w-page mx-auto px-6 py-12 md:py-24">
-        <div className="flex flex-col gap-16">
-          {/* Stacked on phones; side by side from md up. The headshot never shrinks
-            (`shrink-0` on the figure) so its reserved box is stable. */}
-          <header className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
-            <div className="max-w-measure flex flex-col gap-4">
+      <section className="max-w-page mx-auto px-6 py-12 md:py-16">
+        <div className="flex flex-col gap-12">
+          {/* Intro + Background in the left column, headshot to the right spanning both,
+            from md up. A grid rather than a flex row so Background sits directly under
+            the intro instead of below the (taller) photo — a flex row left a large empty
+            gap there. DOM order stays header → photo → Background, so on phones (one
+            column) and for screen readers the order is unchanged.
+            `md:grid-rows-[auto_1fr]`: row 1 hugs the intro; the 1fr row 2 absorbs any
+            extra height from the row-spanning photo, so it never opens a gap between
+            the intro and Background. */}
+          <div className="grid grid-cols-1 gap-x-12 gap-y-8 md:grid-cols-[minmax(0,1fr)_auto] md:grid-rows-[auto_1fr]">
+            <header className="max-w-measure flex flex-col gap-4 md:col-start-1 md:row-start-1">
               <h1 className="text-2xl font-semibold">{ABOUT_PAGE.heading}</h1>
               <p className="text-muted text-lg break-words">
                 {ABOUT_PAGE.intro}
               </p>
-            </div>
-            <Headshot />
-          </header>
+            </header>
 
-          <section
-            aria-labelledby="background"
-            className="max-w-measure flex flex-col gap-3"
-          >
-            <h2 id="background" className="text-lg font-semibold">
-              {ABOUT_PAGE.bioHeading}
-            </h2>
-            {ABOUT_PAGE.bio.map((paragraph, index) => (
-              // Index key is safe: the list is a static constant, never reordered.
-              <p key={index} className="text-muted break-words">
-                {paragraph}
-              </p>
-            ))}
-          </section>
+            {/* The headshot never shrinks (`shrink-0` on the figure), so its reserved
+              box is stable. */}
+            <div className="md:col-start-2 md:row-span-2 md:row-start-1">
+              <Headshot />
+            </div>
+
+            <section
+              aria-labelledby="background"
+              className="max-w-measure flex flex-col gap-3 md:col-start-1 md:row-start-2"
+            >
+              <h2 id="background" className="text-lg font-semibold">
+                {ABOUT_PAGE.bioHeading}
+              </h2>
+              {ABOUT_PAGE.bio.map((paragraph, index) => (
+                // Index key is safe: the list is a static constant, never reordered.
+                <p key={index} className="text-muted break-words">
+                  {paragraph}
+                </p>
+              ))}
+            </section>
+          </div>
 
           <section aria-labelledby="skills" className="flex flex-col gap-4">
             <h2 id="skills" className="text-lg font-semibold">
