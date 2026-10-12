@@ -1,0 +1,67 @@
+/**
+ * components/Footer.tsx — the persistent site footer.
+ *
+ * Owns: the copyright byline and the contact/profile links (email, GitHub, and LinkedIn
+ * when configured). Rendered once by `app/layout.tsx` below `<main>`.
+ *
+ * Server component: the copyright year is computed at render time on the server, which
+ * for statically-generated routes means "at build time".
+ */
+
+import type { JSX } from "react";
+import { SITE } from "@/lib/site";
+
+/** Shared underline-link styling for the footer's outbound links. */
+const LINK =
+  "text-fg decoration-border hover:decoration-accent underline underline-offset-4 transition-colors";
+
+/**
+ * The site footer.
+ *
+ * @returns A `<footer>` landmark with the byline and a list of contact links. LinkedIn is
+ *   rendered only when `SITE.linkedinUrl` is set.
+ *
+ * Side effects: none.
+ *
+ * Known limitation: the year comes from `new Date()` during the server render, so a build
+ * made in December and left undeployed shows last year in January. Accepted rather than
+ * paying for a client-side hydration boundary on a footer line.
+ */
+export default function Footer(): JSX.Element {
+  const year = new Date().getFullYear();
+
+  return (
+    /* Decorative hairline: stays on the low-contrast `border` token deliberately.
+       `outline` is for control boundaries only. */
+    <footer className="border-border/70 mt-24 border-t">
+      <div className="text-muted max-w-page mx-auto flex flex-wrap items-center justify-between gap-x-8 gap-y-2 px-6 py-8 text-sm">
+        <p>
+          © {year} {SITE.name}
+        </p>
+        <ul className="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+          <li>
+            <a href={`mailto:${SITE.email}`} className={LINK}>
+              Email
+            </a>
+          </li>
+          <li>
+            <a href={SITE.githubUrl} rel="noopener noreferrer" className={LINK}>
+              GitHub
+            </a>
+          </li>
+          {SITE.linkedinUrl !== undefined ? (
+            <li>
+              <a
+                href={SITE.linkedinUrl}
+                rel="noopener noreferrer"
+                className={LINK}
+              >
+                LinkedIn
+              </a>
+            </li>
+          ) : null}
+        </ul>
+      </div>
+    </footer>
+  );
+}

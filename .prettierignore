@@ -1,0 +1,32 @@
+# .prettierignore — paths Prettier must not rewrite.
+#
+# Owns the formatter's exclusion list. Two categories:
+#   1. Generated or vendored output that would be reformatted pointlessly on every run.
+#   2. Files whose exact byte content is meaningful and must not be reflowed.
+
+# Generated / installed
+node_modules
+.next
+out
+build
+dist
+coverage
+# Playwright's generated output. Prettier currently also honours `.gitignore`, which
+# already lists these, so this is belt-and-braces rather than a live fix — but the
+# formatter's exclusions should not depend on a default that a future Prettier major
+# could change. ESLint needs the same three paths spelled out in `eslint.config.mjs`,
+# where they are NOT redundant: ESLint does not read `.gitignore` at all.
+playwright-report
+test-results
+.playwright
+next-env.d.ts
+package-lock.json
+# Planning and process documents owned by the human and by other agents. Prettier's
+# markdown reflow would produce enormous, meaningless diffs in these.
+PLANNING.md
+CLAUDE.md
+QA/
+.claude/
+
+# Binary/asset directories
+public/images

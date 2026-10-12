@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# scripts/hooks/pre-push — the gate that makes "it passes locally" mean what people assume.
+#
+# Install with: npm run hooks:install   (sets core.hooksPath; no dependency, no husky)
+# Bypass with:  git push --no-verify    (deliberately easy — see BYPASSING below)
+#
+# WHY THIS EXISTS. Three defects in this project reached CI green-locally and failed there,
+# all because the local suite drives macOS WebKit while CI drives Linux WebKitGTK. Each
+# cost a ~10-minute round trip to find and another to confirm the fix. `test:e2e:linux`
+# closes that gap, but only if it actually gets run, and the moment it is most likely to be
+# skipped is the moment it matters — just before a push.
+#
+# WHAT IT RUNS. The fast gates always; the Linux WebKit suite only when files that could
+# plausibly change rendering or behaviour are in the push. Documentation-only pushes are
+# not worth four minutes of Docker.
+#
+# BYPASSING. `--no-verify` is not discouraged. This hook is a default, not a wall: pushing
+# a WIP branch for a colleague to look at should not require a container. What it prevents
+# is the *silent* case — believing Linux was checked when it was not.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "pre-push: typecheck, lint, format, unit"
+npm run typecheck --silent
+npm run lint --silent
+npm run format:check --silent
+npm run test --silent
+
+# Which files are being pushed? `git diff` against the upstream ref if it exists, else
+# against main. A new branch has no upstream, which is exactly when this runs first.
+UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo '')"
+BASE="${UPSTREAM:-origin/main}"
+CHANGED="$(git diff --name-only "$BASE"...HEAD 2>/dev/null || git diff --name-only HEAD)"
+
+# Anything that can change what a browser renders. Deliberately broad: the sticky-header
+# defect came from a page getting TALLER, which no narrow heuristic would have flagged.
+if echo "$CHANGED" | grep -qE '^(app|components|lib|e2e|public)/|^(playwright|next|vitest|postcss)\.config|^package(-lock)?\.json'; then
+  if docker info >/dev/null 2>&1; then
+    echo "pre-push: running the CI browser build (Linux WebKit) — the one thing local cannot see"
+    npm run test:e2e:linux --silent -- --project=webkit
+  else
+    echo "pre-push: WARNING — Docker is not running, so Linux WebKit was NOT checked." >&2
+    echo "          Three defects in this project passed on macOS WebKit and failed on" >&2
+    echo "          Linux WebKitGTK in CI. Start Docker and run:" >&2
+    echo "            npm run test:e2e:linux -- --project=webkit" >&2
+    echo "          Pushing anyway; CI will be the first Linux run." >&2
+  fi
+else
+  echo "pre-push: no renderable files changed — skipping the Linux browser run"
+fi

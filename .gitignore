@@ -1,0 +1,75 @@
+# .gitignore — files deliberately kept out of version control.
+#
+# Owns the repository's exclusion rules. Grouped by reason so an addition lands in the
+# right place. The one non-obvious rule is the `.env.example` negation below.
+
+# --- Dependencies (reinstallable from package-lock.json) ---
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# --- Build output and framework caches ---
+/.next/
+/out/
+/build
+/dist
+next-env.d.ts
+*.tsbuildinfo
+.swc/
+.turbo/
+.vercel
+
+# --- Secrets ---
+# Every dotenv file is excluded...
+.env
+.env*.local
+.env.development
+.env.production
+.env.test
+# ...except the committed placeholder template. This negation MUST come after the
+# patterns above, because in gitignore the last matching rule wins. Moving it up would
+# silently stop tracking .env.example.
+!.env.example
+
+# --- Test and coverage artifacts ---
+/coverage
+# Playwright output. `playwright-report/` is the HTML report (CI uploads it as an
+# artifact on failure), `test-results/` holds traces, screenshots, and videos from failed
+# runs, and `.playwright/` is scratch state. All three are regenerated per run and can be
+# large — traces especially — so none of them belongs in history.
+/playwright-report/
+/test-results/
+/.playwright/
+# Browser binaries, if PLAYWRIGHT_BROWSERS_PATH is ever pointed inside the repo (some CI
+# cache setups do this). ~100MB per browser; never commit.
+/ms-playwright/
+/.cache/ms-playwright/
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# --- OS / editor cruft ---
+.DS_Store
+*.pem
+
+# --- Source assets (not the web-sized derivatives) ---
+# The photographer's originals, dropped in by the actor: multi-megabyte full-resolution
+# camera files. They are inputs to the build of an asset, not the asset, and a repo is the
+# wrong place for them. What ships is the downscaled derivative committed under
+# `public/images/` — e.g. `public/images/headshot.jpg` (1024x1536, ~344KB) is a downscale
+# of `pictures/Ethan4.JPEG` (3448x5168, 2.8MB). Keep the original here so it can be
+# re-derived at another size; never commit it.
+/pictures/
+
+# Crop candidates generated while choosing the headshot framing (2026-09-25). Kept out of
+# the repo for the same reason as the source photo above: they are working files, and the
+# chosen crop already lives at public/images/headshot.jpg.
+/pictures/crops/

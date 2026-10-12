@@ -1,0 +1,61 @@
+{
+  "name": "software-developer-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "//": "Script names are a contract with CI and the pre-push hook - do not rename dev, build, start, lint, typecheck or format.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "//pretypecheck": "Generates .next/types route definitions (LayoutProps, PageProps) that tsc needs. npm runs this automatically before typecheck, so a fresh clone can typecheck without a prior build. Keep typecheck itself as plain tsc --noEmit.",
+    "pretypecheck": "next typegen",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "//test": "Vitest single run (no watch) - CI-safe. Owns *.test.ts/tsx outside e2e/; see vitest.config.mts.",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "//test:e2e": "Playwright. Builds and serves the app itself via webServer in playwright.config.ts, so no server needs starting first. Owns e2e/*.spec.ts only.",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "//test:e2e:linux": "Runs the e2e suite against the SAME browser build CI uses (Linux WebKitGTK) via Docker. Local `test:e2e` drives macOS WebKit; they are different engines with the same name, and three defects have lived in that gap. See scripts/e2e-linux.sh.",
+    "test:e2e:linux": "bash scripts/e2e-linux.sh",
+    "//hooks:install": "Points git at scripts/hooks/, enabling the pre-push gate. No dependency, no husky. Bypass any single push with --no-verify.",
+    "hooks:install": "git config core.hooksPath scripts/hooks",
+    "//e2e:reset": "Kills anything listening on the e2e ports. RUN THIS FIRST when an e2e run fails en masse with unrelated-looking errors (CSS 404s, contrast/theme/layout failures): a server left over from an earlier run serves a .next that has since been rebuilt, and the resulting ~100 failures look exactly like real defects. Four agents have been caught by this.",
+    "e2e:reset": "lsof -ti :3311 -ti :3312 2>/dev/null | xargs kill 2>/dev/null; true"
+  },
+  "//devDependencyPins": "@types/node tracks the runtime major pinned in .nvmrc (24), not the newest published major - ambient Node globals must describe the Node the code actually runs on, or a newer major types APIs the runtime lacks and they pass typecheck anyway. Vitest is held at 4.x deliberately: Vitest 5 requires Node ^22.12 || ^24 || >=26 so the Node 24 pin no longer blocks it, but 'no longer blocked' is not a reason to take a brand-new major in a commit whose job is to fix CI; 4.x passes all 19 unit tests on Node 24. Revisit that as its own change. (npm rejects // comment keys inside the dependency objects themselves - they are validated as package names - which is why this note lives at the top level.)",
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "^1.63.0",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "eslint-config-prettier": "^10",
+    "jsdom": "^30.0.1",
+    "prettier": "^3",
+    "prettier-plugin-tailwindcss": "^0.6",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
+  },
+  "//engines": "Floor matches the .nvmrc pin (24). Previously >=20, which was wrong in practice: jsdom's bundled undici calls webidl.util.markAsUncloneable, absent on the Node 20 minors GitHub Actions installs, so every vitest worker failed to start (CI run 34379614198). Node 20 is also deprecated on Actions runners. Keep this floor, .nvmrc, and @types/node moving together.",
+  "engines": {
+    "node": ">=24"
+  }
+}

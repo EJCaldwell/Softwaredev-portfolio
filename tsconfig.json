@@ -1,0 +1,82 @@
+/*
+ * tsconfig.json — TypeScript compiler configuration for the voice-acting portfolio.
+ *
+ * Owns: the single source of truth for how every `.ts`/`.tsx` file in the repo is
+ * type-checked. `npm run typecheck` (`tsc --noEmit`) reads this file, as does the
+ * Next.js build and the editor language server, so a change here changes CI.
+ *
+ * Non-default choices and why:
+ *   - "strict": true                  Baseline required by PLANNING.md. Turns on
+ *                                     strictNullChecks et al.
+ *   - "noUncheckedIndexedAccess"      Indexing an array or record yields `T | undefined`.
+ *                                     Reel lookups (`reels[0]`, category maps) must
+ *                                     handle "missing" explicitly rather than crashing
+ *                                     at render time on a bad id in a filter URL.
+ *   - "noImplicitOverride"            Any method overriding a base must say `override`.
+ *                                     Cheap guard against silent signature drift.
+ *   - "noEmit": true                  Next.js/SWC does the transpiling; tsc is a checker
+ *                                     only. Never let tsc write output next to sources.
+ *   - "paths": { "@/*": ["./*"] }     Repo-root-absolute imports (`@/lib/reels`). There is
+ *                                     no `src/` directory, so the alias points at the root.
+ *   - "plugins": [{ "name": "next" }] Enables Next's typed-routes / LayoutProps helpers,
+ *                                     which `app/layout.tsx` relies on.
+ *   - "types": ["node", "vitest/globals"]
+ *                                     "vitest/globals" declares describe/it/expect
+ *                                     ambiently, because `vitest.config.mts` sets
+ *                                     `globals: true` so test files need not import
+ *                                     them. NOTE: setting "types" at
+ *                                     all narrows automatic @types inclusion to just this
+ *                                     list — Next supplies its own React/Node types via
+ *                                     next-env.d.ts and the explicit "include" entries,
+ *                                     so that is safe here, but anything relying on a
+ *                                     bare `@types/*` package being auto-loaded must be
+ *                                     added to this array. "node" is listed explicitly for
+ *                                     exactly that reason: `playwright.config.ts` and
+ *                                     `vitest.config.mts` read `process.env`.
+ *
+ * Ordering requirement: `.next/types/**` and `.next/dev/types/**` must stay in "include".
+ * Next generates route type declarations there during `next build` / `next dev`; dropping
+ * them makes generated types like `LayoutProps<"/">` resolve to `any` or fail outright.
+ * That also means a cold `npm run typecheck` before any build has fewer types available
+ * than one run after a build — run `build` first if you see a missing generated type.
+ *
+ * JSON does not support comments, but TypeScript's config parser accepts JSONC, which is
+ * why this header is legal here.
+ */
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules", "test-results", "playwright-report"]
+}

@@ -1,0 +1,318 @@
+/**
+ * app/globals.css — the single global stylesheet and the project's design-token source
+ * of truth.
+ *
+ * Owns:
+ *   1. The Tailwind CSS v4 import (utilities + preflight).
+ *   2. The `@theme` block: the whole design system — palette, type scale, spacing base,
+ *      radii, fonts. Tailwind v4 is configured *in CSS*, so this block is the equivalent
+ *      of a `tailwind.config.ts`. There is deliberately no such file in this repo; one
+ *      would be ignored by `@tailwindcss/postcss`.
+ *   3. The light/dark theme resolution rules for all three theme states (explicit light,
+ *      explicit dark, and "follow the system" when no explicit choice is stored).
+ *   4. A very small amount of base styling: body background/foreground and a global
+ *      focus-visible ring.
+ *
+ * How it fits: `app/layout.tsx` imports this file once, so every route gets it. The
+ * `data-theme` attribute the rules below key off is written to `<html>` by the inline
+ * bootstrap script in `app/layout.tsx` and updated at runtime by `lib/useTheme.ts`.
+ *
+ * ORDERING REQUIREMENT (do not reorder the blocks at the bottom of this file):
+ *   `:root` light values  →  `@media (prefers-color-scheme: dark)` scoped to
+ *   `:root:not([data-theme])`  →  `:root[data-theme="dark"]`.
+ *   Every color has a light definition on bare `:root`, so the document is never
+ *   dependent on a media query for a value. The media query is scoped to "no explicit
+ *   choice recorded" so a visitor who picked Light is not overridden by a dark OS
+ *   setting, and the explicit-dark selector comes last so it wins regardless of OS.
+ */
+
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Design system
+ *
+ * PALETTE — six colors, no more. The brief is a professional portfolio for someone
+ * selling a voice: the page should read as paper and ink with one accent, so that the
+ * audio player added in Phase 2 is the only loud thing on screen.
+ *   bg       page canvas
+ *   surface  raised panels (cards, the player shell) — one step off the canvas
+ *   fg       primary text
+ *   muted    secondary text: metadata, captions, footer
+ *   border   hairlines and dividers ONLY — see the note below
+ *   outline  the boundary of an interactive control
+ *   accent   interactive affordances and focus rings, used sparingly
+ *
+ * `border` VS `outline` — these are two different jobs and must never be collapsed back
+ * into one token. `border` is a *decorative hairline*: the rule under the sticky nav and
+ * the one above the footer. It is deliberately low-contrast (measured 1.28:1 against `bg`
+ * in light, 1.37:1 in dark) because a 3:1 rule spanning the full page width reads as a
+ * heavy slab on a paper-and-ink palette. `outline` is a *control boundary*: the thing
+ * that tells a visitor where a button begins and ends, which WCAG 1.4.11 requires to
+ * reach 3:1. Measured, `outline` clears 3:1 against BOTH `bg` and `surface` within its
+ * own theme (light 3.25:1 / 3.39:1; dark 3.54:1 / 3.26:1), so a control is delineated
+ * wherever it is placed — the property the Phase 2 audio player's seek track and
+ * transport controls depend on. Raising `border` instead of adding `outline` would fix
+ * the buttons and wreck the page rules; using `muted` as the boundary passes at ~6:1 but
+ * reads as a hard stroke. Hue is preserved in both: `#8f8b85` keeps the warm cast of
+ * `#e2ded8`, `#686b72` the cool cast of `#2a2d34`.
+ * ONE DOCUMENTED EXCEPTION to "controls only": the reserved headshot slot in
+ * `app/about/page.tsx` uses `border-dashed border-outline`. It is not a control, but it is
+ * the largest element in that page's header and `border` left it at 1.19:1 — visually
+ * indistinguishable from a broken image. The rule the exception preserves is the real one:
+ * `border` is for hairlines between things, `outline` is for the edge of a thing that must
+ * be perceivable as an object. Do not read it as a licence to use `outline` for emphasis.
+ * The `--color-*: initial` reset removes Tailwind's default 250-color palette, so
+ * `bg-red-500` and friends stop existing. That is intentional: the only way to use an
+ * off-palette color is to add it here, which forces the decision to be deliberate.
+ *
+ * TYPE SCALE — five sizes and nothing else, on a ~1.25 ratio. `--text-*: initial`
+ * removes Tailwind's default scale for the same reason as the palette.
+ *   body   16px  running text
+ *   sm     14px  metadata, labels, footer
+ *   lg     20px  lead paragraphs, section intros
+ *   xl     28px  section headings
+ *   2xl    44px  the single page-level heading (fluid, clamps on narrow viewports)
+ * Hierarchy is carried by the size *jumps* and by whitespace rather than by weight
+ * variety or color variety.
+ *
+ * SPACING — Tailwind v4 derives every spacing utility from one multiplier, so the scale
+ * is `--spacing × n`. Base is 4px; the house subset is 2/3/4/6/8/12/16/24 (8–96px).
+ * Staying on that subset is what makes the vertical rhythm read as intentional.
+ * ------------------------------------------------------------------------- */
+
+@theme {
+  /* -- palette (values resolve per-theme via the variables at the bottom) -- */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-bg: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-fg: var(--theme-fg);
+  --color-muted: var(--theme-muted);
+  --color-border: var(--theme-border);
+  --color-outline: var(--theme-outline);
+  --color-accent: var(--theme-accent);
+
+  /* -- type scale -- */
+  --text-*: initial;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 1.25;
+  --text-xl--letter-spacing: -0.015em;
+  --text-2xl: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --text-2xl--line-height: 1.1;
+  --text-2xl--letter-spacing: -0.02em;
+
+  /* -- spacing base (see note above) -- */
+  --spacing: 0.25rem;
+
+  /* -- radii: two steps only, both subtle. Ornament is not the point here. -- */
+  --radius-*: initial;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-full: 9999px;
+
+  /* -- fonts: ONE family, and the resets below are what enforce that.
+        `--font-sans` is wired to the next/font CSS variable set in layout.tsx. The
+        fallback stack matters because next/font can fail to load offline or behind a
+        blocking proxy, and the site must still set type in a system UI face.
+
+        `--font-mono: initial` and `--font-serif: initial` delete Tailwind's default
+        families, so `font-mono` and `font-serif` are not utilities that exist. Without
+        these two lines the `@theme` resets are inconsistent: `--color-*`, `--text-*` and
+        `--radius-*` are zeroed but the font families are not, so Tailwind's monospace
+        stack survives into the bundle and any stray `font-mono` silently ships a second
+        typeface the system never documented. Eyebrow / kicker text gets its
+        "small-caps-ish" texture from `text-sm tracking-wider uppercase` instead. -- */
+  --font-mono: initial;
+  --font-serif: initial;
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* -- layout widths: `page` is the outer gutter-to-gutter container used by the nav,
+        the footer, and every page section. `measure` is the reading width for running
+        prose, ~65-75 characters at `--text-body`.
+
+        NESTING REQUIREMENT: `measure` must sit *inside* a `page` container, not be
+        centered on its own. Centering two different max-widths in the same viewport
+        centers them on the same axis but NOT on the same left edge — above 1088px a
+        centered 40rem column starts ~200px right of the centered 68rem nav directly
+        above it, so an `h1` would never line up with the brand wordmark. The correct
+        pattern, which every page follows, is:
+            <section class="max-w-page mx-auto px-6 py-24">
+              <div class="max-w-measure"> ...prose... </div>
+            </section>
+        That puts the measure's left edge exactly on the nav's left edge. -- */
+  --container-measure: 40rem;
+  --container-page: 68rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme state 1 — LIGHT, and the baseline for every color in the system.
+ * Bare `:root`, no media query. If a color is not defined here it is a bug.
+ * ------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --theme-bg: #fbfaf8;
+  --theme-surface: #ffffff;
+  --theme-fg: #16181d;
+  --theme-muted: #5d626e;
+  --theme-border: #e2ded8;
+  /* 3.25:1 vs --theme-bg, 3.39:1 vs --theme-surface. Control boundaries only. */
+  --theme-outline: #8f8b85;
+  --theme-accent: #9a4a2f;
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme state 2 — SYSTEM DEFAULT (no stored choice, OS prefers dark).
+ * Scoped to `:not([data-theme])` so it only applies before/without an explicit choice.
+ * ------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --theme-bg: #101114;
+    --theme-surface: #181a1f;
+    --theme-fg: #eceae6;
+    --theme-muted: #9a9ea9;
+    --theme-border: #2a2d34;
+    /* 3.54:1 vs --theme-bg, 3.26:1 vs --theme-surface. Control boundaries only. */
+    --theme-outline: #686b72;
+    --theme-accent: #e79070;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme state 3 — EXPLICIT DARK. Last, so it beats the media query above on a
+ * light-preferring OS. (`data-theme="light"` needs no block: `:root` already is light.)
+ * ------------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-bg: #101114;
+  --theme-surface: #181a1f;
+  --theme-fg: #eceae6;
+  --theme-muted: #9a9ea9;
+  --theme-border: #2a2d34;
+  /* 3.54:1 vs --theme-bg, 3.26:1 vs --theme-surface. Control boundaries only. */
+  --theme-outline: #686b72;
+  --theme-accent: #e79070;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base element styling. Kept minimal — everything else is a utility at the call site.
+ * ------------------------------------------------------------------------- */
+body {
+  /* Explicit token-backed background: the canvas must never fall through to the UA white,
+     which would flash against a dark theme. */
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+
+  /* SITE-WIDE, INHERITED, AND DELIBERATE — Phase 5.2 review follow-up.
+     `overflow-wrap: break-word` (Tailwind's `break-words`) was, until this rule, applied
+     one element at a time wherever a specific string was measured overflowing at an
+     enlarged root font: an email address, a placeholder label, a file path in a notice.
+     That is a losing strategy — this site's PLACEHOLDER copy is a stand-in for real
+     content nobody has written yet, and real production titles, credits and URLs will be
+     just as capable of containing one long unbroken token as `lib/reels.ts` or
+     `PLACEHOLDER:` are. Tuning a fix to the literal strings on screen today would leave
+     the exact same defect waiting under the first piece of real copy that happens to be
+     long. `overflow-wrap` is inherited, so setting it once here reaches every current and
+     future paragraph, heading, `dt`/`dd`, and list item without a `break-words` class at
+     every call site — the fix generalises to content this repo has not written yet,
+     which per-element classes structurally cannot.
+
+     `break-word` (not `anywhere`) breaks ONLY when a line has no other way to fit — a
+     normal sentence with normal spaces is completely unaffected, so this has no visible
+     effect until a single word is genuinely wider than its container, which is exactly
+     the failure this exists to catch.
+
+     WHAT THIS DOES NOT FIX, AND WHY. An element whose box never receives a width
+     constraint at all — a flex or grid item stretched by neither `stretch` (the default)
+     nor an explicit `w-full`, e.g. one laid out with `items-start`/`items-center` — has
+     nothing for `overflow-wrap` to measure against: the box shrink-wraps to its own
+     unbroken content and “doesn’t fit” never triggers. Those are fixed at the call site
+     with `min-w-0` (flex) or `w-full` (to defeat shrink-to-fit) — see `app/page.tsx`’s
+     contact section and `app/about/page.tsx`’s `HeadshotSlot` and `app/demos/page.tsx`’s
+     `CategorySection` heading row for the three shapes of that problem found so far.
+     Establishing a real width constraint is a per-layout decision this global rule cannot
+     make for you; this rule is what makes that constraint, once established, actually
+     hold against arbitrary content. */
+  overflow-wrap: break-word;
+}
+
+/* One focus treatment for the entire site, so no interactive element can ship without a
+   visible focus indicator. `:focus-visible` (not `:focus`) keeps it off mouse clicks.
+   Offset is what makes the ring legible against both the canvas and a surface.
+
+   DO NOT add `border-radius` here. This rule is UNLAYERED, and unlayered declarations
+   beat every cascade layer regardless of source order — so a `border-radius` here would
+   override `.rounded-full` (which lives in `@layer utilities`) and snap every pill
+   control from 9999px to 4px the instant it took keyboard focus. Focus indication must
+   be additive: the `outline` property already follows the element's own border radius,
+   so there is nothing to set. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The seek slider's hit area (`h-11`, 44px, Phase 5.2) is far taller than the 4px line it
+   paints (see `components/AudioPlayer.tsx`'s `trackStyle`), so the default 2px offset
+   above draws a full-height ring around a mostly-empty box — a keyboard visitor sees a
+   tall rectangle with a thin line floating inside it, found in the same review pass that
+   caught the readout drift on the hero layout. Pulled in here so the ring hugs the
+   painted track instead of the invisible touch target.
+
+   THE ARITHMETIC: before `h-11`, the box was `h-4` (16px) with a 2px offset, so the ring
+   stood 20px tall (16 + 2*2). To reproduce that same 20px ring around the new 44px box,
+   solve `20 = 44 + 2*offset`: offset = -12px.
+
+   DELIBERATELY UNLAYERED, and scoped with an attribute selector rather than a class or
+   a Tailwind `focus-visible:` utility, for the SAME reason the `border-radius` warning
+   above exists: a Tailwind utility compiles into `@layer utilities`, and an unlayered
+   declaration beats every layered one regardless of selector specificity or source
+   order — so a `focus-visible:outline-offset-*` class on the slider would compile
+   correctly and then silently never apply. `input[type="range"]` is scoped as narrowly
+   as this site's markup allows: the seek control is the only range input anywhere on the
+   site (confirmed: `grep -r 'type="range"' components app` — one match, in
+   `components/AudioPlayer.tsx`), so this cannot collide with, or be collided into by, any
+   other control's focus ring. Specificity still resolves the two rules correctly on its
+   own merits even though both are unlayered — `input[type="range"]:focus-visible` (a
+   type selector plus a pseudo-class) is more specific than the bare `:focus-visible`
+   above — but do not rely on that alone if a third unlayered rule is ever added here;
+   read this comment again before doing so. */
+input[type="range"]:focus-visible {
+  outline-offset: -12px;
+}
+
+/* Respect a reduced-motion preference globally rather than per-component; there is no
+   animation on the site that carries meaning. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* `scroll-behavior` in the universal rule above does not reliably apply: it takes
+     effect on the *scrolling element*, which is `html` (or `body`), and a `*` rule can be
+     shadowed there by a more specific declaration. Setting it on `html` explicitly is
+     what actually suppresses smooth scrolling. Currently moot — nothing sets
+     `scroll-behavior: smooth` yet — but this would fail silently the day smooth anchor
+     scrolling is added, which is exactly the bug nobody finds. */
+  html {
+    scroll-behavior: auto !important;
+  }
+}
